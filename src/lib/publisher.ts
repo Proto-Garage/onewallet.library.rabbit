@@ -27,5 +27,7 @@ export default class Publisher {
     });
   }
 
-  async stop() {}
+  async stop() {
+    await this.channel.close();
+  }
 }

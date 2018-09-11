@@ -1,5 +1,6 @@
 import { Connection, Channel } from 'amqplib';
 import { v1 as uuid } from 'uuid';
+import * as TaskQueue from 'p-queue';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
 import delay from './delay';
 import RabbitError from './error';
@@ -8,69 +9,77 @@ export default class Client {
   public channel: Channel;
   private callback: string;
   private callbacks: Map<string, { resolve: Function; reject: Function }>;
+  private taskQueue: TaskQueue;
   private options: {
     timeout: number;
     noResponse: boolean;
+  } = {
+    timeout: 60000,
+    noResponse: false,
   };
   constructor(
     private connection: Connection,
     private queue: string,
     options?: ClientOptions
   ) {
-    this.options = {
-      timeout: 60000,
-      noResponse: false,
-      ...(options || {}),
-    };
+    if (options) {
+      this.options = {
+        ...this.options,
+        ...options,
+      };
+    }
 
     this.callback = `callback.${uuid().replace('-', '')}`;
     this.callbacks = new Map();
+
+    this.taskQueue = new TaskQueue();
   }
 
   async send(...args: Array<any>) {
-    const correlationId = uuid().replace(/-/g, '');
+    return this.taskQueue.add(async () => {
+      const correlationId = uuid().replace(/-/g, '');
 
-    const payload: RequestMessage = {
-      correlationId,
-      arguments: args,
-      noResponse: this.options.noResponse,
-      timestamp: Date.now(),
-    };
-
-    await this.channel.sendToQueue(
-      this.queue,
-      new Buffer(JSON.stringify(payload)),
-      {
+      const payload: RequestMessage = {
         correlationId,
-        replyTo: this.callback,
-        persistent: true,
-        expiration: this.options.timeout,
+        arguments: args,
+        noResponse: this.options.noResponse,
+        timestamp: Date.now(),
+      };
+
+      await this.channel.sendToQueue(
+        this.queue,
+        new Buffer(JSON.stringify(payload)),
+        {
+          correlationId,
+          replyTo: this.callback,
+          persistent: true,
+          expiration: this.options.timeout,
+        }
+      );
+
+      if (this.options.noResponse) {
+        return;
       }
-    );
 
-    if (this.options.noResponse) {
-      return;
-    }
+      let callback;
+      const promise = new Promise((resolve, reject) => {
+        callback = { resolve, reject };
+      });
+      this.callbacks.set(correlationId, callback);
 
-    let callback;
-    const promise = new Promise((resolve, reject) => {
-      callback = { resolve, reject };
+      return Promise.race([
+        promise,
+        (async () => {
+          await delay(this.options.timeout);
+          this.callbacks.delete(correlationId);
+
+          throw new RabbitError('TIMEOUT', 'Request timeout.', {
+            queue: this.queue,
+            arguments: args,
+          });
+        })(),
+      ]);
     });
-    this.callbacks.set(correlationId, callback);
-
-    return promise;
-    return Promise.race([
-      promise,
-      (async () => {
-        await delay(this.options.timeout);
-        this.callbacks.delete(correlationId);
-
-        throw new RabbitError('TIMEOUT', 'Request timeout.', {
-          queue: this.queue,
-          arguments: args,
-        });
-      })(),
-    ]);
   }
 
   async start() {
@@ -116,5 +125,8 @@ export default class Client {
     );
   }
 
-  async stop() {}
+  async stop() {
+    await this.taskQueue.onEmpty();
+    await this.channel.close();
+  }
 }

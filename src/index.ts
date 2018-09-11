@@ -15,16 +15,17 @@ export default class Rabbit {
   private options: {
     uri: string;
     prefix: string;
+  } = {
+    uri: 'amqp://127.0.0.1',
+    prefix: '',
   };
+  private channels: Array<Client | Worker | Publisher | Subscriber> = [];
   constructor(options?: RabbitOptions) {
-    this.options = {
-      uri: 'amqp://127.0.0.1',
-      prefix: '',
-      ...(options || {}),
-    };
-
     if (options) {
-      Object.assign(this.options, options);
+      this.options = {
+        ...this.options,
+        ...options,
+      };
     }
 
     if (this.options.uri) {
@@ -40,6 +41,8 @@ export default class Rabbit {
       options
     );
     await client.start();
+
+    this.channels.push(client);
 
     return async function(...args: Array<any>) {
       return client.send.apply(client, args);
@@ -60,6 +63,8 @@ export default class Rabbit {
     );
     await worker.start();
 
+    this.channels.push(worker);
+
     return worker;
   }
   async createPublisher(exchange: string) {
@@ -70,6 +75,8 @@ export default class Rabbit {
       `${this.options.prefix}${exchange}`
     );
     await publisher.start();
+
+    this.channels.push(publisher);
 
     return async function(topic: string, ...args: Array<any>) {
       return publisher.send.apply(publisher, [topic, ...args]);
@@ -90,7 +97,11 @@ export default class Rabbit {
     );
     await subscriber.start();
 
+    this.channels.push(subscriber);
+
     return subscriber;
   }
-  async stop() {}
+  async stop() {
+    await Promise.all(this.channels.map(channel => channel.stop()));
+  }
 }

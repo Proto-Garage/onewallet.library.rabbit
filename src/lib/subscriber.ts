@@ -1,13 +1,18 @@
 import { Connection, Channel } from 'amqplib';
 import * as R from 'ramda';
 import { v1 as uuid } from 'uuid';
+import * as TaskQueue from 'p-queue';
 import { SubscriberOptions, PublishMessage } from './types';
 
 export default class Subscriber {
   private channel: Channel;
+  private taskQueue: TaskQueue;
   private options: {
     topic: string;
     concurrency: number;
+  } = {
+    topic: '*',
+    concurrency: 1,
   };
   private queue: string;
   constructor(
@@ -16,13 +21,15 @@ export default class Subscriber {
     private handler: () => Promise<any>,
     options?: SubscriberOptions
   ) {
-    this.options = {
-      topic: '*',
-      concurrency: 1,
-      ...(options || {}),
-    };
+    if (options) {
+      this.options = {
+        ...this.options,
+        ...options,
+      };
+    }
 
     this.queue = `subscriber.${uuid().replace('-', '')}`;
+    this.taskQueue = new TaskQueue();
   }
   async start() {
     this.channel = await this.connection.createChannel();
@@ -40,24 +47,31 @@ export default class Subscriber {
     await this.channel.consume(
       this.queue,
       async message => {
-        if (!message) {
-          return;
-        }
-
-        const payload: PublishMessage = JSON.parse(message.content.toString());
-
-        try {
-          let result = this.handler.apply(this.handler, payload.arguments);
-
-          if (!R.isNil(result) && typeof result.then === 'function') {
-            result = await result;
+        await this.taskQueue.add(async () => {
+          if (!message) {
+            return;
           }
-        } catch (err) {}
 
-        await this.channel.ack(message);
+          const payload: PublishMessage = JSON.parse(
+            message.content.toString()
+          );
+
+          try {
+            let result = this.handler.apply(this.handler, payload.arguments);
+
+            if (!R.isNil(result) && typeof result.then === 'function') {
+              result = await result;
+            }
+          } catch (err) {}
+
+          await this.channel.ack(message);
+        });
       },
       { noAck: false }
     );
   }
-  async stop() {}
+  async stop() {
+    await this.taskQueue.onEmpty();
+    await this.channel.close();
+  }
 }

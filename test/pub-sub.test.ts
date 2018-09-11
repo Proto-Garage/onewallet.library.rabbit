@@ -32,7 +32,7 @@ describe('PubSub', () => {
     expect(handler.args[0][0]).to.be.deep.equal(message);
   });
 
-  it.only('should publish message to multiple subscribers', async () => {
+  it('should publish message to multiple subscribers', async () => {
     const exchange = 'test_exchange';
 
     const handlers = await Promise.all(
