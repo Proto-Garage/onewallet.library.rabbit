@@ -27,7 +27,7 @@ export default class Client {
     this.callbacks = new Map();
   }
 
-  async execute(...args: Array<any>) {
+  async send(...args: Array<any>) {
     const correlationId = uuid().replace(/-/g, '');
 
     const payload: RequestMessage = {

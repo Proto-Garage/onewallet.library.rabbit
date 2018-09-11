@@ -1,7 +1,9 @@
 import { Connection, connect } from 'amqplib';
 import Client from './lib/client';
-import { ClientOptions, WorkerOptions } from './lib/types';
 import Worker from './lib/worker';
+import Publisher from './lib/publisher';
+import Subscriber from './lib/subscriber';
+import { ClientOptions, WorkerOptions, SubscriberOptions } from './lib/types';
 
 interface RabbitOptions {
   uri?: string;
@@ -40,7 +42,7 @@ export default class Rabbit {
     await client.start();
 
     return async function(...args: Array<any>) {
-      return client.execute.apply(client, args);
+      return client.send.apply(client, args);
     };
   }
   async createWorker(
@@ -59,6 +61,36 @@ export default class Rabbit {
     await worker.start();
 
     return worker;
+  }
+  async createPublisher(exchange: string) {
+    const connection = await this.connecting;
+
+    const publisher = new Publisher(
+      connection,
+      `${this.options.prefix}${exchange}`
+    );
+    await publisher.start();
+
+    return async function(topic: string, ...args: Array<any>) {
+      return publisher.send.apply(publisher, [topic, ...args]);
+    };
+  }
+  async createSubscriber(
+    exchange: string,
+    handler: (...args: Array<any>) => Promise<any>,
+    options?: SubscriberOptions
+  ) {
+    const connection = await this.connecting;
+
+    const subscriber = new Subscriber(
+      connection,
+      `${this.options.prefix}${exchange}`,
+      handler,
+      options
+    );
+    await subscriber.start();
+
+    return subscriber;
   }
   async stop() {}
 }

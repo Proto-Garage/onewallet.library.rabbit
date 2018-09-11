@@ -14,11 +14,21 @@ export interface ResponseMessage {
   };
 }
 
+export interface PublishMessage {
+  arguments: Array<any>;
+  timestamp: number;
+}
+
 export interface ClientOptions {
   timeout?: number;
   noResponse?: boolean;
 }
 
 export interface WorkerOptions {
+  concurrency?: number;
+}
+
+export interface SubscriberOptions {
+  topic?: string;
   concurrency?: number;
 }
