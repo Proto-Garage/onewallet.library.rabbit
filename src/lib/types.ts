@@ -19,13 +19,6 @@ export interface ClientOptions {
   noResponse?: boolean;
 }
 
-export interface QueueOptions {
-  name: string;
-  messageTtl?: number;
-  maxLength?: number;
-}
-
 export interface WorkerOptions {
-  queue: QueueOptions;
   concurrency?: number;
 }

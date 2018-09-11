@@ -44,21 +44,17 @@ export default class Rabbit {
     };
   }
   async createWorker(
-    options: WorkerOptions,
-    handler: (...args: Array<any>) => Promise<any>
+    queue: string,
+    handler: (...args: Array<any>) => Promise<any>,
+    options?: WorkerOptions
   ) {
     const connection = await this.connecting;
 
     const worker = new Worker(
       connection,
-      {
-        ...options,
-        queue: {
-          ...options.queue,
-          name: `${this.options && this.options.prefix}${options.queue.name}`,
-        },
-      },
-      handler
+      `${this.options.prefix}${queue}`,
+      handler,
+      options
     );
     await worker.start();
 

@@ -24,14 +24,7 @@ describe('RPC', () => {
     }));
     const queue = 'test_queue';
 
-    await rabbit.createWorker(
-      {
-        queue: {
-          name: queue,
-        },
-      },
-      handler
-    );
+    await rabbit.createWorker(queue, handler);
 
     const client = await rabbit.createClient(queue);
     const result = await client({ operand: 3 });
@@ -49,14 +42,7 @@ describe('RPC', () => {
           square: message.operand * message.operand,
         }));
 
-        await rabbit.createWorker(
-          {
-            queue: {
-              name: queue,
-            },
-          },
-          handler
-        );
+        await rabbit.createWorker(queue, handler);
 
         return handler;
       })(3)
@@ -88,14 +74,7 @@ describe('RPC', () => {
       square: message.operand * message.operand,
     }));
 
-    await rabbit.createWorker(
-      {
-        queue: {
-          name: queue,
-        },
-      },
-      handler
-    );
+    await rabbit.createWorker(queue, handler);
 
     await Promise.all(
       R.times(async () => {

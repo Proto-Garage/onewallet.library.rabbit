@@ -22,14 +22,7 @@ describe('Fire and Forget', () => {
     const handler = sinon.fake();
     const queue = 'test_queue';
 
-    await rabbit.createWorker(
-      {
-        queue: {
-          name: queue,
-        },
-      },
-      handler
-    );
+    await rabbit.createWorker(queue, handler);
 
     const client = await rabbit.createClient(queue, { noResponse: true });
 
@@ -48,14 +41,7 @@ describe('Fire and Forget', () => {
       R.times(async () => {
         const handler = sinon.fake();
 
-        await rabbit.createWorker(
-          {
-            queue: {
-              name: queue,
-            },
-          },
-          handler
-        );
+        await rabbit.createWorker(queue, handler);
 
         return handler;
       })(3)
@@ -83,14 +69,7 @@ describe('Fire and Forget', () => {
     const queue = 'test_queue';
 
     const handler = sinon.fake();
-    await rabbit.createWorker(
-      {
-        queue: {
-          name: queue,
-        },
-      },
-      handler
-    );
+    await rabbit.createWorker(queue, handler);
 
     await Promise.all(
       R.times(async () => {

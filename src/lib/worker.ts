@@ -4,24 +4,31 @@ import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
 
 export default class Worker {
   private channel: Channel;
+  private options: {
+    concurrency: number;
+  };
   constructor(
     public connection: Connection,
-    private options: WorkerOptions,
-    public handler: () => Promise<any>
-  ) {}
+    private queue: string,
+    private handler: () => Promise<any>,
+    options?: WorkerOptions
+  ) {
+    this.options = {
+      concurrency: 1,
+      ...(options || {}),
+    };
+  }
   async start() {
     this.channel = await this.connection.createChannel();
-    await this.channel.assertQueue(this.options.queue.name, {
+    await this.channel.assertQueue(this.queue, {
       exclusive: false,
       durable: true,
       autoDelete: false,
-      messageTtl: this.options.queue.messageTtl,
-      maxLength: this.options.queue.maxLength,
     });
-    await this.channel.prefetch(this.options.concurrency || 1);
+    await this.channel.prefetch(this.options.concurrency);
 
     await this.channel.consume(
-      this.options.queue.name,
+      this.queue,
       async message => {
         if (!message) {
           return;

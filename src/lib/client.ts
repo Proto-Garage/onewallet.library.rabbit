@@ -44,6 +44,7 @@ export default class Client {
         correlationId,
         replyTo: this.callback,
         persistent: true,
+        expiration: this.options.timeout,
       }
     );
 
