@@ -18,7 +18,7 @@ export default class Client {
     noResponse: false,
   };
   constructor(
-    private connection: Connection,
+    public connection: Connection,
     private queue: string,
     options?: ClientOptions
   ) {

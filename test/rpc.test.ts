@@ -18,7 +18,7 @@ describe('RPC', () => {
     await rabbit.stop();
   });
 
-  it('should send request to worker', async () => {
+  it.only('should send request to worker', async () => {
     const handler = sinon.fake(message => ({
       square: message.operand * message.operand,
     }));

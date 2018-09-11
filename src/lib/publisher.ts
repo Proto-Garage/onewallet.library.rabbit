@@ -3,7 +3,7 @@ import { PublishMessage } from './types';
 
 export default class Publisher {
   public channel: Channel;
-  constructor(private connection: Connection, private exchange: string) {}
+  constructor(public connection: Connection, private exchange: string) {}
 
   async send(topic: string, ...args: Array<any>) {
     const payload: PublishMessage = {

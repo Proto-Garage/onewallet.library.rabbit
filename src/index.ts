@@ -1,4 +1,6 @@
 import { Connection, connect } from 'amqplib';
+import * as retry from 'retry';
+import * as debug from 'debug';
 import Client from './lib/client';
 import Worker from './lib/worker';
 import Publisher from './lib/publisher';
@@ -12,11 +14,13 @@ interface RabbitOptions {
 
 export default class Rabbit {
   private connecting: Promise<Connection>;
+  private connection: Connection;
+  private stopping: boolean = false;
   private options: {
     uri: string;
     prefix: string;
   } = {
-    uri: 'amqp://127.0.0.1',
+    uri: 'amqp://localhost',
     prefix: '',
   };
   private channels: Array<Client | Worker | Publisher | Subscriber> = [];
@@ -29,8 +33,45 @@ export default class Rabbit {
     }
 
     if (this.options.uri) {
-      this.connecting = Promise.resolve(connect(this.options.uri));
+      this.establishConnection();
     }
+  }
+  private async establishConnection() {
+    this.connecting = new Promise(resolve => {
+      const operation = retry.operation({
+        forever: true,
+        factor: 2,
+        minTimeout: 1000,
+        maxTimeout: 10000,
+        randomize: true,
+      });
+      operation.attempt(() => {
+        connect(this.options.uri)
+          .then(connection => {
+            connection.on('close', () => {
+              debug('rabbit:info')('disconnected');
+              if (!this.stopping) {
+                this.establishConnection();
+              }
+            });
+            connection.on('error', err => {
+              debug('rabbit:error')(err.message);
+            });
+
+            for (const channel of this.channels) {
+              channel.connection = connection;
+              channel.start();
+            }
+
+            debug('rabbit:info')('connected');
+            resolve(connection);
+          })
+          .catch(err => {
+            debug('rabbit:error')(err.message);
+            operation.retry(err);
+          });
+      });
+    });
   }
   async createClient(queue: string, options?: ClientOptions) {
     const connection = await this.connecting;
@@ -102,6 +143,10 @@ export default class Rabbit {
     return subscriber;
   }
   async stop() {
+    this.stopping = true;
     await Promise.all(this.channels.map(channel => channel.stop()));
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 }
