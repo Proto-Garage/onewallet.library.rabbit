@@ -11,10 +11,10 @@ const rabbit = new Rabbit();
 
 async main() {
   await rabbit.createWorker(
-    'myqueue',
+    'myscope',
     async message => message
   );
-  const sendRequest = rabbit.createClient('myqueue');
+  const sendRequest = await rabbit.createClient('myscope');
 
   const result = await sendRequest('Hello World!');
   assert.equal(result, 'Hello World!');
@@ -32,10 +32,10 @@ const rabbit = new Rabbit();
 
 async main() {
   await rabbit.createWorker(
-    'myqueue',
+    'myscope',
     async message => assert.equal(result, 'Hello World!')
   );
-  const sendMessage = rabbit.createClient('myqueue', { noReponse: true });
+  const sendMessage = await rabbit.createClient('myscope', { noReponse: true });
 
   sendMessage('Hello World!');
 }
@@ -52,11 +52,11 @@ const rabbit = new Rabbit();
 
 async main() {
   await rabbit.createSubscriber(
-    'myexchange',
+    'myscope',
     async message => assert.equal(message, 'Hello World!'),
     { topic: 'mytopic' }
   );
-  const publish = rabbit.createPublisher('myexchange');
+  const publish = await rabbit.createPublisher('myscope');
 
   await publish('mytopic', 'Hello World!');
 }
@@ -169,6 +169,8 @@ await rabbit.createSubscriber(
 - `options.concurrency` - Number of messages that the subscriber can handle at the same time. Default value is `1`.
 
 ### `rabbit.stop()`
+
+Gracefully shut down all channels.
 
 ```javascript
 await rabbit.stop();
