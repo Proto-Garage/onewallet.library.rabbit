@@ -1,6 +1,7 @@
 import { Connection, Channel } from 'amqplib';
 import * as R from 'ramda';
 import * as TaskQueue from 'p-queue';
+import * as debug from 'debug';
 import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
 
 export default class Worker {
@@ -50,6 +51,7 @@ export default class Worker {
           const request: RequestMessage = JSON.parse(
             message.content.toString()
           );
+          debug('rabbit:worker:request')(request);
 
           let response: ResponseMessage = { correlationId };
           try {

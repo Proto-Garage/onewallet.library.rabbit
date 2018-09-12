@@ -1,4 +1,5 @@
 import { Connection, Channel } from 'amqplib';
+import * as debug from 'debug';
 import { PublishMessage } from './types';
 
 export default class Publisher {
@@ -10,6 +11,7 @@ export default class Publisher {
       arguments: args,
       timestamp: Date.now(),
     };
+    debug('rabbit:publisher')(payload);
 
     await this.channel.publish(
       this.exchange,

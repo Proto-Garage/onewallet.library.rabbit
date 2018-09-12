@@ -2,6 +2,7 @@ import { Connection, Channel } from 'amqplib';
 import * as R from 'ramda';
 import { v1 as uuid } from 'uuid';
 import * as TaskQueue from 'p-queue';
+import * as debug from 'debug';
 import { SubscriberOptions, PublishMessage } from './types';
 
 export default class Subscriber {
@@ -55,6 +56,7 @@ export default class Subscriber {
           const payload: PublishMessage = JSON.parse(
             message.content.toString()
           );
+          debug('rabbit:subscriber')(payload);
 
           try {
             let result = this.handler.apply(this.handler, payload.arguments);

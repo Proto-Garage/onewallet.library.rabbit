@@ -1,6 +1,7 @@
 import { Connection, Channel } from 'amqplib';
 import { v1 as uuid } from 'uuid';
 import * as TaskQueue from 'p-queue';
+import * as debug from 'debug';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
 import delay from './delay';
 import RabbitError from './error';
@@ -39,16 +40,16 @@ export default class Client {
     return this.taskQueue.add(async () => {
       const correlationId = uuid().replace(/-/g, '');
 
-      const payload: RequestMessage = {
+      const request: RequestMessage = {
         correlationId,
         arguments: args,
         noResponse: this.options.noResponse,
         timestamp: Date.now(),
       };
-
+      debug('rabbit:client:request')(request);
       await this.channel.sendToQueue(
         this.queue,
-        new Buffer(JSON.stringify(payload)),
+        new Buffer(JSON.stringify(request)),
         {
           correlationId,
           replyTo: this.callback,
@@ -109,6 +110,8 @@ export default class Client {
         const response: ResponseMessage = JSON.parse(
           message.content.toString()
         );
+        debug('rabbit:client:response')(response);
+
         const callback = this.callbacks.get(correlationId);
         if (callback) {
           if (response.result) {
