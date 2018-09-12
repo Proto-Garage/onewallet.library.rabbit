@@ -167,3 +167,9 @@ await rabbit.createSubscriber(
 - `options` - Subscriber options.
 - `options.topic` - Used to filter messages based on topic. Default value is `*`.
 - `options.concurrency` - Number of messages that the subscriber can handle at the same time. Default value is `1`.
+
+### `rabbit.stop()`
+
+```javascript
+await rabbit.stop();
+```
