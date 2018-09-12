@@ -73,12 +73,12 @@ export default class Rabbit {
       });
     });
   }
-  async createClient(queue: string, options?: ClientOptions) {
+  async createClient(scope: string, options?: ClientOptions) {
     const connection = await this.connecting;
 
     const client = new Client(
       connection,
-      `${this.options.prefix}${queue}`,
+      `${this.options.prefix}${scope}`,
       options
     );
     await client.start();
@@ -90,7 +90,7 @@ export default class Rabbit {
     };
   }
   async createWorker(
-    queue: string,
+    scope: string,
     handler: (...args: Array<any>) => Promise<any>,
     options?: WorkerOptions
   ) {
@@ -98,7 +98,7 @@ export default class Rabbit {
 
     const worker = new Worker(
       connection,
-      `${this.options.prefix}${queue}`,
+      `${this.options.prefix}${scope}`,
       handler,
       options
     );
@@ -108,12 +108,12 @@ export default class Rabbit {
 
     return worker;
   }
-  async createPublisher(exchange: string) {
+  async createPublisher(scope: string) {
     const connection = await this.connecting;
 
     const publisher = new Publisher(
       connection,
-      `${this.options.prefix}${exchange}`
+      `${this.options.prefix}${scope}`
     );
     await publisher.start();
 
@@ -124,7 +124,7 @@ export default class Rabbit {
     };
   }
   async createSubscriber(
-    exchange: string,
+    scope: string,
     handler: (...args: Array<any>) => Promise<any>,
     options?: SubscriberOptions
   ) {
@@ -132,7 +132,7 @@ export default class Rabbit {
 
     const subscriber = new Subscriber(
       connection,
-      `${this.options.prefix}${exchange}`,
+      `${this.options.prefix}${scope}`,
       handler,
       options
     );
