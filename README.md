@@ -109,7 +109,7 @@ const sendMessage = await rabbit.createClient('myscope', {
 
 ```javascript
 await rabbit.createWorker('myscope', async message => {
-  // handler message here
+  // handle message
 });
 ```
 
@@ -117,10 +117,10 @@ await rabbit.createWorker('myscope', async message => {
 await rabbit.createWorker(
   'myscope',
   async message => {
-    // handler message here
+    // handle message
   },
   {
-    concurrency: 10,
+    concurrency: 1,
   }
 );
 ```
@@ -145,16 +145,19 @@ const publish = await rabbit.createPublisher('scope');
 ### `rabbit.createSubscriber(scope, handler[, options])`
 
 ```javascript
-await rabbit.createWorker('myscope', async message => {
-  // handler message here
+await rabbit.createSubscriber('myscope', async message => {
+  // handle message
 });
 ```
 
 ```javascript
-const sendRequest = await rabbit.createClient('myscope', {
-  timeout: 60000,
-  noResponse: false,
-});
+await rabbit.createSubscriber(
+  'myscope',
+  async message => {
+    // handle message
+  },
+  { topic: '*', concurrency: 1 }
+);
 ```
 
 #### Arguments
