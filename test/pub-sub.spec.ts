@@ -22,7 +22,7 @@ describe('PubSub', () => {
     const handler = sinon.fake();
     const exchange = 'test_exchange';
 
-    await rabbit.createSubscriber(exchange, handler);
+    await rabbit.createSubscriber(exchange, handler, { topics: ['*'] });
 
     const publish = await rabbit.createPublisher(exchange);
     const message = { message: 'Hello World!' };
@@ -39,7 +39,7 @@ describe('PubSub', () => {
       R.times(async () => {
         const handler = sinon.fake();
 
-        await rabbit.createSubscriber(exchange, handler, { topic: 'topic' });
+        await rabbit.createSubscriber(exchange, handler, { topics: ['topic'] });
         return handler;
       })(5)
     );
@@ -58,7 +58,7 @@ describe('PubSub', () => {
     const handler = sinon.fake();
     const exchange = 'test_exchange';
 
-    await rabbit.createSubscriber(exchange, handler);
+    await rabbit.createSubscriber(exchange, handler, { topics: ['*'] });
 
     const publish = await rabbit.createPublisher(exchange);
     await Promise.all(
@@ -79,16 +79,16 @@ describe('PubSub', () => {
     const handlerAll = sinon.fake();
 
     await rabbit.createSubscriber(exchange, handlerRed, {
-      topic: 'number.red',
+      topics: ['number.red'],
     });
     await rabbit.createSubscriber(exchange, handlerGreen, {
-      topic: 'number.green',
+      topics: ['number.green'],
     });
     await rabbit.createSubscriber(exchange, handlerBlue, {
-      topic: 'number.blue',
+      topics: ['number.blue'],
     });
     await rabbit.createSubscriber(exchange, handlerAll, {
-      topic: 'number.*',
+      topics: ['number.*'],
     });
 
     const publish = await rabbit.createPublisher(exchange);
@@ -104,5 +104,23 @@ describe('PubSub', () => {
     expect(handlerBlue.callCount).to.be.equal(1);
     expect(handlerBlue.args[0][0]).to.deep.equal({ color: 'blue' });
     expect(handlerAll.callCount).to.be.equal(3);
+  });
+
+  it('should add topic', async () => {
+    const exchange = 'test_exchange';
+
+    const handler = sinon.fake();
+
+    const subscriber = await rabbit.createSubscriber(exchange, handler);
+    await subscriber.addTopic('number.red');
+    await subscriber.addTopic('number.green');
+    await subscriber.addTopic('number.blue');
+    const publish = await rabbit.createPublisher(exchange);
+    await publish('number.red', { color: 'red' });
+    await publish('number.green', { color: 'green' });
+    await publish('number.blue', { color: 'blue' });
+    await delay(100);
+
+    expect(handler.callCount).to.be.equal(3);
   });
 });

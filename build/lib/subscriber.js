@@ -52,6 +52,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var uuid_1 = require("uuid");
 var p_queue_1 = __importDefault(require("p-queue"));
 var logger_1 = __importDefault(require("./logger"));
+var error_1 = __importDefault(require("./error"));
 var Subscriber = (function () {
     function Subscriber(connection, exchange, handler, options) {
         this.connection = connection;
@@ -59,15 +60,33 @@ var Subscriber = (function () {
         this.handler = handler;
         this.channel = null;
         this.options = {
-            topic: '*',
+            topics: [],
             concurrency: 1,
         };
         if (options) {
             this.options = __assign({}, this.options, options);
         }
-        this.queue = "subscriber." + uuid_1.v1().replace('-', '');
+        this.queue = "subscriber." + (this.options.queue || uuid_1.v4().replace('-', ''));
+        this.topics = this.options.topics;
         this.taskQueue = new p_queue_1.default();
     }
+    Subscriber.prototype.addTopic = function (topic) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!this.channel) {
+                            throw new error_1.default('CHANNEL_NOT_READY', 'Channel is not ready.');
+                        }
+                        this.topics.push(topic);
+                        return [4, this.channel.bindQueue(this.queue, this.exchange, topic)];
+                    case 1:
+                        _a.sent();
+                        return [2];
+                }
+            });
+        });
+    };
     Subscriber.prototype.start = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
@@ -91,7 +110,19 @@ var Subscriber = (function () {
                             })];
                     case 3:
                         _b.sent();
-                        return [4, this.channel.bindQueue(this.queue, this.exchange, this.options.topic)];
+                        return [4, Promise.all(this.topics.map(function (topic) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            if (!this.channel) return [3, 2];
+                                            return [4, this.channel.bindQueue(this.queue, this.exchange, topic)];
+                                        case 1:
+                                            _a.sent();
+                                            _a.label = 2;
+                                        case 2: return [2];
+                                    }
+                                });
+                            }); }))];
                     case 4:
                         _b.sent();
                         return [4, this.channel.prefetch(this.options.concurrency)];

@@ -29,6 +29,7 @@ export interface WorkerOptions {
 }
 
 export interface SubscriberOptions {
-  topic?: string;
+  topics: string[];
+  queue?: string;
   concurrency?: number;
 }

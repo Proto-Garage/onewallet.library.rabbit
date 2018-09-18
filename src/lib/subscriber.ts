@@ -1,19 +1,22 @@
 import { Connection, Channel } from 'amqplib';
-import { v1 as uuid } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import TaskQueue from 'p-queue';
 import logger from './logger';
 import { SubscriberOptions, PublishMessage } from './types';
+import RabbitError from './error';
 
 export default class Subscriber {
   private channel: Channel | null = null;
   private taskQueue: TaskQueue;
   private options: {
-    topic: string;
+    topics: string[];
+    queue?: string;
     concurrency: number;
   } = {
-    topic: '*',
+    topics: [],
     concurrency: 1,
   };
+  private topics: string[];
   private queue: string;
   constructor(
     public connection: Connection,
@@ -28,8 +31,17 @@ export default class Subscriber {
       };
     }
 
-    this.queue = `subscriber.${uuid().replace('-', '')}`;
+    this.queue = `subscriber.${this.options.queue || uuid().replace('-', '')}`;
+    this.topics = this.options.topics;
     this.taskQueue = new TaskQueue();
+  }
+  async addTopic(topic: string) {
+    if (!this.channel) {
+      throw new RabbitError('CHANNEL_NOT_READY', 'Channel is not ready.');
+    }
+
+    this.topics.push(topic);
+    await this.channel.bindQueue(this.queue, this.exchange, topic);
   }
   async start() {
     this.channel = await this.connection.createChannel();
@@ -42,7 +54,15 @@ export default class Subscriber {
     await this.channel.assertExchange(this.exchange, 'topic', {
       durable: true,
     });
-    await this.channel.bindQueue(this.queue, this.exchange, this.options.topic);
+
+    await Promise.all(
+      this.topics.map(async topic => {
+        if (this.channel) {
+          await this.channel.bindQueue(this.queue, this.exchange, topic);
+        }
+      })
+    );
+
     await this.channel.prefetch(this.options.concurrency);
 
     await this.channel.consume(

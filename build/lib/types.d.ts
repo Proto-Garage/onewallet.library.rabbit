@@ -24,7 +24,8 @@ export interface WorkerOptions {
     concurrency?: number;
 }
 export interface SubscriberOptions {
-    topic?: string;
+    topics: string[];
+    queue?: string;
     concurrency?: number;
 }
 //# sourceMappingURL=types.d.ts.map
