@@ -1,11 +1,10 @@
 import { Connection, Channel } from 'amqplib';
-import * as R from 'ramda';
-import * as TaskQueue from 'p-queue';
-import * as debug from 'debug';
+import TaskQueue from 'p-queue';
+import logger from './logger';
 import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
 
 export default class Worker {
-  private channel: Channel;
+  private channel: Channel | null = null;
   private taskQueue: TaskQueue;
   private options: {
     concurrency: number;
@@ -40,7 +39,7 @@ export default class Worker {
       this.queue,
       async message => {
         await this.taskQueue.add(async () => {
-          if (!message) {
+          if (!message || !this.channel) {
             return;
           }
 
@@ -51,18 +50,27 @@ export default class Worker {
           const request: RequestMessage = JSON.parse(
             message.content.toString()
           );
-          debug('rabbit:worker:request')(request);
+          logger
+            .tag('worker')
+            .tag('request')
+            .verbose(request);
 
           let response: ResponseMessage = { correlationId };
           try {
             let result = this.handler.apply(this.handler, request.arguments);
 
-            if (!R.isNil(result) && typeof result.then === 'function') {
+            if (
+              !(result === null || result === undefined) &&
+              typeof result.then === 'function'
+            ) {
               result = await result;
             }
+
             response.result = result;
           } catch (err) {
-            const error = { message: err.message };
+            const error: { message: string; [key: string]: any } = {
+              message: err.message as string,
+            };
             for (const key in err) {
               error[key] = err[key];
             }
@@ -87,6 +95,8 @@ export default class Worker {
   }
   async stop() {
     await this.taskQueue.onEmpty();
-    await this.channel.close();
+    if (this.channel) {
+      await this.channel.close();
+    }
   }
 }

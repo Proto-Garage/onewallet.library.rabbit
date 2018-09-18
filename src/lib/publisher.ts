@@ -1,17 +1,21 @@
 import { Connection, Channel } from 'amqplib';
-import * as debug from 'debug';
+import logger from './logger';
 import { PublishMessage } from './types';
+import RabbitError from './error';
 
 export default class Publisher {
-  public channel: Channel;
+  public channel: Channel | null = null;
   constructor(public connection: Connection, private exchange: string) {}
 
   async send(topic: string, ...args: Array<any>) {
+    if (!this.channel) {
+      throw new RabbitError('CHANNEL_NOT_READY', 'Channel not started.');
+    }
     const payload: PublishMessage = {
       arguments: args,
       timestamp: Date.now(),
     };
-    debug('rabbit:publisher')(payload);
+    logger.tag('publisher').verbose(payload);
 
     await this.channel.publish(
       this.exchange,
@@ -30,6 +34,8 @@ export default class Publisher {
   }
 
   async stop() {
-    await this.channel.close();
+    if (this.channel) {
+      await this.channel.close();
+    }
   }
 }

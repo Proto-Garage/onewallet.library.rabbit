@@ -1,13 +1,13 @@
-import * as sinon from 'sinon';
-import * as randomstring from 'randomstring';
-import * as R from 'ramda';
+import sinon from 'sinon';
+import randomstring from 'randomstring';
+import R from 'ramda';
 import { expect } from 'chai';
 import Rabbit from '../src';
 import delay from '../src/lib/delay';
 
 describe('PubSub', () => {
   let prefix;
-  let rabbit;
+  let rabbit: Rabbit;
 
   beforeEach(async () => {
     prefix = randomstring.generate(6);

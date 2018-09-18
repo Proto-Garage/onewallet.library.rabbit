@@ -1,6 +1,6 @@
 import { Connection, connect } from 'amqplib';
 import * as retry from 'retry';
-import * as debug from 'debug';
+import logger from './lib/logger';
 import Client from './lib/client';
 import Worker from './lib/worker';
 import Publisher from './lib/publisher';
@@ -14,7 +14,7 @@ interface RabbitOptions {
 
 export default class Rabbit {
   private connecting: Promise<Connection>;
-  private connection: Connection;
+  private connection: Connection | null = null;
   private stopping: boolean = false;
   private options: {
     uri: string;
@@ -32,47 +32,49 @@ export default class Rabbit {
       };
     }
 
-    if (this.options.uri) {
-      this.establishConnection();
-    }
-  }
-  private async establishConnection() {
-    this.connecting = new Promise(resolve => {
-      const operation = retry.operation({
-        forever: true,
-        factor: 2,
-        minTimeout: 1000,
-        maxTimeout: 10000,
-        randomize: true,
-      });
-      operation.attempt(() => {
-        connect(this.options.uri)
-          .then(connection => {
-            connection.on('close', () => {
-              debug('rabbit:info')('disconnected');
-              if (!this.stopping) {
-                this.establishConnection();
+    const establishConnection = async () => {
+      return new Promise<Connection>(resolve => {
+        const operation = retry.operation({
+          forever: true,
+          factor: 2,
+          minTimeout: 1000,
+          maxTimeout: 10000,
+          randomize: true,
+        });
+        operation.attempt(() => {
+          connect(this.options.uri)
+            .then(connection => {
+              connection.on('close', () => {
+                logger.info('disconnected');
+                if (!this.stopping) {
+                  this.connecting = establishConnection();
+                }
+              });
+
+              connection.on('error', err => {
+                logger.error(err.message);
+              });
+
+              for (const channel of this.channels) {
+                channel.connection = connection;
+                channel.start();
               }
-            });
-            connection.on('error', err => {
-              debug('rabbit:error')(err.message);
-            });
 
-            for (const channel of this.channels) {
-              channel.connection = connection;
-              channel.start();
-            }
-
-            debug('rabbit:info')('connected');
-            resolve(connection);
-          })
-          .catch(err => {
-            debug('rabbit:error')(err.message);
-            operation.retry(err);
-          });
+              logger.info('connected');
+              this.connection = connection;
+              resolve(connection);
+            })
+            .catch(err => {
+              logger.error(err.message);
+              operation.retry(err);
+            });
+        });
       });
-    });
+    };
+
+    this.connecting = establishConnection();
   }
+
   async createClient(scope: string, options?: ClientOptions) {
     const connection = await this.connecting;
 

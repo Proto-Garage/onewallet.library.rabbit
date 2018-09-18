@@ -1,13 +1,13 @@
 import { Connection, Channel } from 'amqplib';
 import { v1 as uuid } from 'uuid';
-import * as TaskQueue from 'p-queue';
-import * as debug from 'debug';
+import TaskQueue from 'p-queue';
+import logger from './logger';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
 import delay from './delay';
 import RabbitError from './error';
 
 export default class Client {
-  public channel: Channel;
+  public channel: Channel | null = null;
   private callback: string;
   private callbacks: Map<string, { resolve: Function; reject: Function }>;
   private taskQueue: TaskQueue;
@@ -38,6 +38,10 @@ export default class Client {
 
   async send(...args: Array<any>) {
     return this.taskQueue.add(async () => {
+      if (!this.channel) {
+        throw new RabbitError('CHANNEL_NOT_READY', 'Channel not started.');
+      }
+
       const correlationId = uuid().replace(/-/g, '');
 
       const request: RequestMessage = {
@@ -46,7 +50,12 @@ export default class Client {
         noResponse: this.options.noResponse,
         timestamp: Date.now(),
       };
-      debug('rabbit:client:request')(request);
+
+      logger
+        .tag('client')
+        .tag('request')
+        .verbose(request);
+
       await this.channel.sendToQueue(
         this.queue,
         new Buffer(JSON.stringify(request)),
@@ -62,11 +71,9 @@ export default class Client {
         return;
       }
 
-      let callback;
       const promise = new Promise((resolve, reject) => {
-        callback = { resolve, reject };
+        this.callbacks.set(correlationId, { resolve, reject });
       });
-      this.callbacks.set(correlationId, callback);
 
       return Promise.race([
         promise,
@@ -110,7 +117,11 @@ export default class Client {
         const response: ResponseMessage = JSON.parse(
           message.content.toString()
         );
-        debug('rabbit:client:response')(response);
+
+        logger
+          .tag('client')
+          .tag('response')
+          .verbose(response);
 
         const callback = this.callbacks.get(correlationId);
         if (callback) {
@@ -130,6 +141,8 @@ export default class Client {
 
   async stop() {
     await this.taskQueue.onEmpty();
-    await this.channel.close();
+    if (this.channel) {
+      await this.channel.close();
+    }
   }
 }

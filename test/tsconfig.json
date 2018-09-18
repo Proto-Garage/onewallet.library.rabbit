@@ -1,9 +1,4 @@
 {
-  "extends": "./../tsconfig/base",
-  "compilerOptions": {
-    "types": ["node", "mocha"],
-    "typeRoots": ["./", "node_modules/@types"]
-  },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules/", "**/node_modules/*"]
+  "extends": "./../tsconfig",
+  "include": ["./**/*.spec.ts", "./../@types/**/*.d.ts"]
 }

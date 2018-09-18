@@ -1,13 +1,13 @@
-import * as sinon from 'sinon';
-import * as randomstring from 'randomstring';
+import sinon from 'sinon';
+import randomstring from 'randomstring';
 import { expect } from 'chai';
-import * as R from 'ramda';
+import R from 'ramda';
 import Rabbit from '../src';
 import delay from '../src/lib/delay';
 
 describe('Fire and Forget', () => {
   let prefix;
-  let rabbit;
+  let rabbit: Rabbit;
 
   beforeEach(async () => {
     prefix = randomstring.generate(6);
@@ -58,7 +58,10 @@ describe('Fire and Forget', () => {
     await delay(100);
 
     expect(
-      R.reduce(R.add, '0')(R.map(R.prop('callCount'))(handlers))
+      R.compose(
+        R.reduce<number, number>(R.add, 0),
+        R.map<sinon.SinonSpy, number>(R.prop('callCount'))
+      )(handlers)
     ).to.be.equal(20);
     for (const handler of handlers) {
       expect(handler.callCount).to.be.greaterThan(0);

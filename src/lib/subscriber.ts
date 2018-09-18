@@ -1,12 +1,11 @@
 import { Connection, Channel } from 'amqplib';
-import * as R from 'ramda';
 import { v1 as uuid } from 'uuid';
-import * as TaskQueue from 'p-queue';
-import * as debug from 'debug';
+import TaskQueue from 'p-queue';
+import logger from './logger';
 import { SubscriberOptions, PublishMessage } from './types';
 
 export default class Subscriber {
-  private channel: Channel;
+  private channel: Channel | null = null;
   private taskQueue: TaskQueue;
   private options: {
     topic: string;
@@ -34,6 +33,7 @@ export default class Subscriber {
   }
   async start() {
     this.channel = await this.connection.createChannel();
+
     await this.channel.assertQueue(this.queue, {
       exclusive: false,
       durable: true,
@@ -49,19 +49,22 @@ export default class Subscriber {
       this.queue,
       async message => {
         await this.taskQueue.add(async () => {
-          if (!message) {
+          if (!message || !this.channel) {
             return;
           }
 
           const payload: PublishMessage = JSON.parse(
             message.content.toString()
           );
-          debug('rabbit:subscriber')(payload);
+          logger.tag('subscriber').verbose(payload);
 
           try {
             let result = this.handler.apply(this.handler, payload.arguments);
 
-            if (!R.isNil(result) && typeof result.then === 'function') {
+            if (
+              !(result === null || result === undefined) &&
+              typeof result.then === 'function'
+            ) {
               result = await result;
             }
           } catch (err) {}
@@ -74,6 +77,8 @@ export default class Subscriber {
   }
   async stop() {
     await this.taskQueue.onEmpty();
-    await this.channel.close();
+    if (this.channel) {
+      await this.channel.close();
+    }
   }
 }
