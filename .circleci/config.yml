@@ -32,6 +32,7 @@ jobs:
   test:
     docker:
       - image: circleci/node:8.11.4-stretch
+      - image: rabbitmq:3.6-alpine
     steps:
       - run:
           name: save SHA to a file
