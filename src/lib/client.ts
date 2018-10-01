@@ -1,10 +1,11 @@
 import { Connection, Channel } from 'amqplib';
 import { v1 as uuid } from 'uuid';
 import TaskQueue from 'p-queue';
+import AppError from 'onewallet.library.error';
+
 import logger from './logger';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
 import delay from './delay';
-import RabbitError from './error';
 
 export default class Client {
   public channel: Channel | null = null;
@@ -39,7 +40,7 @@ export default class Client {
   async send(...args: Array<any>) {
     return this.taskQueue.add(async () => {
       if (!this.channel) {
-        throw new RabbitError('CHANNEL_NOT_READY', 'Channel not started.');
+        throw new AppError('CHANNEL_NOT_READY', 'Channel not started.');
       }
 
       const correlationId = uuid().replace(/-/g, '');
@@ -81,7 +82,7 @@ export default class Client {
           await delay(this.options.timeout);
           this.callbacks.delete(correlationId);
 
-          throw new RabbitError('TIMEOUT', 'Request timeout.', {
+          throw new AppError('TIMEOUT', 'Request timeout.', {
             queue: this.queue,
             arguments: args,
           });
@@ -129,7 +130,7 @@ export default class Client {
             callback.resolve(response.result);
           } else {
             callback.reject(
-              new RabbitError('WORKER_ERROR', 'Worker error', response.error)
+              new AppError('WORKER_ERROR', 'Worker error', response.error)
             );
           }
           this.callbacks.delete(correlationId);

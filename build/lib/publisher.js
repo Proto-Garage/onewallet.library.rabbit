@@ -38,8 +38,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
 var logger_1 = __importDefault(require("./logger"));
-var error_1 = __importDefault(require("./error"));
 var Publisher = (function () {
     function Publisher(connection, exchange) {
         this.connection = connection;
@@ -57,7 +57,7 @@ var Publisher = (function () {
                 switch (_a.label) {
                     case 0:
                         if (!this.channel) {
-                            throw new error_1.default('CHANNEL_NOT_READY', 'Channel not started.');
+                            throw new onewallet_library_error_1.default('CHANNEL_NOT_READY', 'Channel not started.');
                         }
                         payload = {
                             arguments: args,

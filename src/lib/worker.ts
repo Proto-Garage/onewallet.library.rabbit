@@ -1,5 +1,6 @@
 import { Connection, Channel } from 'amqplib';
 import TaskQueue from 'p-queue';
+
 import logger from './logger';
 import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
 
@@ -50,6 +51,7 @@ export default class Worker {
           const request: RequestMessage = JSON.parse(
             message.content.toString()
           );
+
           logger
             .tag('worker')
             .tag('request')
@@ -68,13 +70,22 @@ export default class Worker {
 
             response.result = result;
           } catch (err) {
-            const error: { message: string; [key: string]: any } = {
-              message: err.message as string,
-            };
-            for (const key in err) {
-              error[key] = err[key];
+            if (err.name === 'AppError') {
+              const error: { message: string; [key: string]: any } = {
+                message: err.message as string,
+              };
+              for (const key in err) {
+                error[key] = err[key];
+              }
+              response.error = error;
+            } else {
+              logger.tag('worker').error(err);
+
+              response.error = {
+                code: 'INTERNAL_ERROR',
+                message: 'Internal server error',
+              };
             }
-            response.error = error;
           }
 
           await this.channel.ack(message);

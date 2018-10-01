@@ -1,9 +1,10 @@
 import { Connection, Channel } from 'amqplib';
 import { v4 as uuid } from 'uuid';
 import TaskQueue from 'p-queue';
+import AppError from 'onewallet.library.error';
+
 import logger from './logger';
 import { SubscriberOptions, PublishMessage } from './types';
-import RabbitError from './error';
 
 export default class Subscriber {
   private channel: Channel | null = null;
@@ -37,7 +38,7 @@ export default class Subscriber {
   }
   async addTopic(topic: string) {
     if (!this.channel) {
-      throw new RabbitError('CHANNEL_NOT_READY', 'Channel is not ready.');
+      throw new AppError('CHANNEL_NOT_READY', 'Channel is not ready.');
     }
 
     this.topics.push(topic);

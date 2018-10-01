@@ -51,8 +51,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var uuid_1 = require("uuid");
 var p_queue_1 = __importDefault(require("p-queue"));
+var onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
 var logger_1 = __importDefault(require("./logger"));
-var error_1 = __importDefault(require("./error"));
 var Subscriber = (function () {
     function Subscriber(connection, exchange, handler, options) {
         this.connection = connection;
@@ -76,7 +76,7 @@ var Subscriber = (function () {
                 switch (_a.label) {
                     case 0:
                         if (!this.channel) {
-                            throw new error_1.default('CHANNEL_NOT_READY', 'Channel is not ready.');
+                            throw new onewallet_library_error_1.default('CHANNEL_NOT_READY', 'Channel is not ready.');
                         }
                         this.topics.push(topic);
                         return [4, this.channel.bindQueue(this.queue, this.exchange, topic)];

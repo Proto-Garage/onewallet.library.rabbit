@@ -1,6 +1,6 @@
-# `onewallet-util-rabbit`
+# `Rabbit`
 
-A simple microservice framework based on RabbitMQ.
+A microservice framework powered by RabbitMQ.
 
 ## RPC
 
@@ -54,7 +54,7 @@ async main() {
   await rabbit.createSubscriber(
     'myscope',
     async message => assert.equal(message, 'Hello World!'),
-    { topic: 'mytopic' }
+    { topics: ['mytopic'] }
   );
   const publish = await rabbit.createPublisher('myscope');
 
@@ -156,7 +156,7 @@ await rabbit.createSubscriber(
   async message => {
     // handle message
   },
-  { topic: '*', concurrency: 1 }
+  { topics: ['*'], concurrency: 1 }
 );
 ```
 
@@ -165,7 +165,7 @@ await rabbit.createSubscriber(
 - `scope` - Scope. `required`.
 - `handler` - Function to be executed when subscriber receives a message. `required`.
 - `options` - Subscriber options.
-- `options.topic` - Used to filter messages based on topic. Default value is `*`.
+- `options.topics` - Used to filter messages. Default value is `[]`.
 - `options.concurrency` - Number of messages that the subscriber can handle at the same time. Default value is `1`.
 
 ### `rabbit.stop()`

@@ -51,9 +51,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var uuid_1 = require("uuid");
 var p_queue_1 = __importDefault(require("p-queue"));
+var onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
 var logger_1 = __importDefault(require("./logger"));
 var delay_1 = __importDefault(require("./delay"));
-var error_1 = __importDefault(require("./error"));
 var Client = (function () {
     function Client(connection, queue, options) {
         this.connection = connection;
@@ -85,7 +85,7 @@ var Client = (function () {
                             switch (_a.label) {
                                 case 0:
                                     if (!this.channel) {
-                                        throw new error_1.default('CHANNEL_NOT_READY', 'Channel not started.');
+                                        throw new onewallet_library_error_1.default('CHANNEL_NOT_READY', 'Channel not started.');
                                     }
                                     correlationId = uuid_1.v1().replace(/-/g, '');
                                     request = {
@@ -121,7 +121,7 @@ var Client = (function () {
                                                         case 1:
                                                             _a.sent();
                                                             this.callbacks.delete(correlationId);
-                                                            throw new error_1.default('TIMEOUT', 'Request timeout.', {
+                                                            throw new onewallet_library_error_1.default('TIMEOUT', 'Request timeout.', {
                                                                 queue: this.queue,
                                                                 arguments: args,
                                                             });
@@ -174,7 +174,7 @@ var Client = (function () {
                                             callback.resolve(response.result);
                                         }
                                         else {
-                                            callback.reject(new error_1.default('WORKER_ERROR', 'Worker error', response.error));
+                                            callback.reject(new onewallet_library_error_1.default('WORKER_ERROR', 'Worker error', response.error));
                                         }
                                         this.callbacks.delete(correlationId);
                                     }

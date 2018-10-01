@@ -1,7 +1,8 @@
 import { Connection, Channel } from 'amqplib';
+import AppError from 'onewallet.library.error';
+
 import logger from './logger';
 import { PublishMessage } from './types';
-import RabbitError from './error';
 
 export default class Publisher {
   public channel: Channel | null = null;
@@ -9,7 +10,7 @@ export default class Publisher {
 
   async send(topic: string, ...args: Array<any>) {
     if (!this.channel) {
-      throw new RabbitError('CHANNEL_NOT_READY', 'Channel not started.');
+      throw new AppError('CHANNEL_NOT_READY', 'Channel not started.');
     }
     const payload: PublishMessage = {
       arguments: args,

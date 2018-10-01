@@ -120,13 +120,22 @@ var Worker = (function () {
                                                             return [3, 5];
                                                         case 4:
                                                             err_1 = _a.sent();
-                                                            error = {
-                                                                message: err_1.message,
-                                                            };
-                                                            for (key in err_1) {
-                                                                error[key] = err_1[key];
+                                                            if (err_1.name === 'AppError') {
+                                                                error = {
+                                                                    message: err_1.message,
+                                                                };
+                                                                for (key in err_1) {
+                                                                    error[key] = err_1[key];
+                                                                }
+                                                                response.error = error;
                                                             }
-                                                            response.error = error;
+                                                            else {
+                                                                logger_1.default.tag('worker').error(err_1);
+                                                                response.error = {
+                                                                    code: 'INTERNAL_ERROR',
+                                                                    message: 'Internal server error',
+                                                                };
+                                                            }
                                                             return [3, 5];
                                                         case 5: return [4, this.channel.ack(message)];
                                                         case 6:
