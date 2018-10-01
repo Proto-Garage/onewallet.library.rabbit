@@ -5,7 +5,8 @@
   "main": "build/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "TS_NODE_PROJECT=test/tsconfig.json TS_NODE_FILES=true mocha ./test/**/*.spec.ts"
+    "test": "TS_NODE_PROJECT=test/tsconfig.json TS_NODE_FILES=true mocha ./test/**/*.spec.ts",
+    "lint": "tslint --project tsconfig.json"
   },
   "author": "High Output Ventures",
   "license": "ISC",
