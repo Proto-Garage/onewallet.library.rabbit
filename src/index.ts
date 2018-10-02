@@ -12,6 +12,8 @@ interface RabbitOptions {
   prefix?: string;
 }
 
+export { Client, Worker, Publisher, Subscriber };
+
 export default class Rabbit {
   private connecting: Promise<Connection>;
   private connection: Connection | null = null;
