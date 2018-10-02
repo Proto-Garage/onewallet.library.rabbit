@@ -1,10 +1,11 @@
 {
   "name": "onewallet.library.rabbit",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "RabbitMQ client",
   "main": "build/index.js",
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf ./build",
+    "build": "npm run clean && tsc",
     "test": "TS_NODE_PROJECT=test/tsconfig.json TS_NODE_FILES=true mocha ./test/**/*.spec.ts",
     "lint": "tslint --project tsconfig.json"
   },
@@ -24,6 +25,7 @@
     "chai": "^4.1.2",
     "prettier": "^1.14.2",
     "randomstring": "^1.1.5",
+    "rimraf": "^2.6.2",
     "sinon": "^6.2.0",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",

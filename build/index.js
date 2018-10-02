@@ -60,9 +60,13 @@ var amqplib_1 = require("amqplib");
 var retry = __importStar(require("retry"));
 var logger_1 = __importDefault(require("./lib/logger"));
 var client_1 = __importDefault(require("./lib/client"));
+exports.Client = client_1.default;
 var worker_1 = __importDefault(require("./lib/worker"));
+exports.Worker = worker_1.default;
 var publisher_1 = __importDefault(require("./lib/publisher"));
+exports.Publisher = publisher_1.default;
 var subscriber_1 = __importDefault(require("./lib/subscriber"));
+exports.Subscriber = subscriber_1.default;
 var Rabbit = (function () {
     function Rabbit(options) {
         var _this = this;

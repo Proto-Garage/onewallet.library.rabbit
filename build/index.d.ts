@@ -1,10 +1,13 @@
+import Client from './lib/client';
 import Worker from './lib/worker';
+import Publisher from './lib/publisher';
 import Subscriber from './lib/subscriber';
 import { ClientOptions, WorkerOptions, SubscriberOptions } from './lib/types';
 interface RabbitOptions {
     uri?: string;
     prefix?: string;
 }
+export { Client, Worker, Publisher, Subscriber };
 export default class Rabbit {
     private connecting;
     private connection;
@@ -18,5 +21,4 @@ export default class Rabbit {
     createSubscriber(scope: string, handler: (...args: Array<any>) => Promise<any>, options?: SubscriberOptions): Promise<Subscriber>;
     stop(): Promise<void>;
 }
-export {};
 //# sourceMappingURL=index.d.ts.map
