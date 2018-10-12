@@ -8,8 +8,11 @@ export interface ResponseMessage {
     correlationId: string;
     result?: any;
     error?: {
+        code: string;
         message: string;
-        [key: string]: any;
+        meta?: {
+            [key: string]: any;
+        };
     };
 }
 export interface PublishMessage {

@@ -91,7 +91,7 @@ var Worker = (function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0: return [4, this.taskQueue.add(function () { return __awaiter(_this, void 0, void 0, function () {
-                                                var correlationId, request, response, result, err_1, error, key;
+                                                var correlationId, request, response, result, err_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
                                                         case 0:
@@ -121,18 +121,12 @@ var Worker = (function () {
                                                         case 4:
                                                             err_1 = _a.sent();
                                                             if (err_1.name === 'AppError') {
-                                                                error = {
-                                                                    message: err_1.message,
-                                                                };
-                                                                for (key in err_1) {
-                                                                    error[key] = err_1[key];
-                                                                }
-                                                                response.error = error;
+                                                                response.error = err_1.toJSON();
                                                             }
                                                             else {
                                                                 logger_1.default.tag('worker').error(err_1);
                                                                 response.error = {
-                                                                    code: 'INTERNAL_ERROR',
+                                                                    code: 'SERVER_ERROR',
                                                                     message: 'Internal server error',
                                                                 };
                                                             }

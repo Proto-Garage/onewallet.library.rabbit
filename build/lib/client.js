@@ -157,7 +157,7 @@ var Client = (function () {
                     case 2:
                         _b.sent();
                         return [4, this.channel.consume(this.callback, function (message) { return __awaiter(_this, void 0, void 0, function () {
-                                var correlationId, response, callback;
+                                var correlationId, response, callback, error;
                                 return __generator(this, function (_a) {
                                     if (!message) {
                                         return [2];
@@ -173,8 +173,9 @@ var Client = (function () {
                                         if (response.result) {
                                             callback.resolve(response.result);
                                         }
-                                        else {
-                                            callback.reject(new onewallet_library_error_1.default('WORKER_ERROR', 'Worker error', response.error));
+                                        else if (response.error) {
+                                            error = response.error;
+                                            callback.reject(new onewallet_library_error_1.default(error.code, error.message, error.meta));
                                         }
                                         this.callbacks.delete(correlationId);
                                     }
