@@ -128,9 +128,10 @@ export default class Client {
         if (callback) {
           if (response.result) {
             callback.resolve(response.result);
-          } else {
+          } else if (response.error) {
+            const { error } = response;
             callback.reject(
-              new AppError('WORKER_ERROR', 'Worker error', response.error)
+              new AppError(error.code, error.message, error.meta)
             );
           }
           this.callbacks.delete(correlationId);
