@@ -1,9 +1,14 @@
 import sinon from 'sinon';
 import R from 'ramda';
 import randomstring from 'randomstring';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import AppError from 'onewallet.library.error';
+import chaiAsPromised from 'chai-as-promised';
+
 import delay from '../src/lib/delay';
 import Rabbit from '../src';
+
+chai.use(chaiAsPromised);
 
 describe('RPC', () => {
   let prefix;
@@ -16,6 +21,42 @@ describe('RPC', () => {
 
   afterEach(async () => {
     await rabbit.stop();
+  });
+
+  it('should send AppError to client', async () => {
+    const handler = sinon.fake(async () => {
+      throw new AppError('TEST_ERROR', 'Test error');
+    });
+
+    const queue = 'test_queue';
+
+    await rabbit.createWorker(queue, handler);
+
+    const client = await rabbit.createClient(queue);
+
+    try {
+      expect(client({}))
+        .to.eventually.throw()
+        .to.has.property('code', 'TEST_ERROR');
+    } catch (err) {}
+  });
+
+  it('should not send Error to client', async () => {
+    const handler = sinon.fake(async () => {
+      throw new Error('Test error');
+    });
+
+    const queue = 'test_queue';
+
+    await rabbit.createWorker(queue, handler);
+
+    const client = await rabbit.createClient(queue);
+
+    try {
+      expect(client({}))
+        .to.eventually.throw()
+        .to.has.property('code', 'SERVER_ERROR');
+    } catch (err) {}
   });
 
   it('should send request to worker', async () => {
