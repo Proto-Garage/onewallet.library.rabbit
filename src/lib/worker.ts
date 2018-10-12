@@ -71,18 +71,12 @@ export default class Worker {
             response.result = result;
           } catch (err) {
             if (err.name === 'AppError') {
-              const error: { message: string; [key: string]: any } = {
-                message: err.message as string,
-              };
-              for (const key in err) {
-                error[key] = err[key];
-              }
-              response.error = error;
+              response.error = err.toJSON();
             } else {
               logger.tag('worker').error(err);
 
               response.error = {
-                code: 'INTERNAL_ERROR',
+                code: 'SERVER_ERROR',
                 message: 'Internal server error',
               };
             }
