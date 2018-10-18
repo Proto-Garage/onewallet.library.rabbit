@@ -38,7 +38,7 @@
     "debug": "^4.0.0",
     "highoutput-utilities": "0.0.7",
     "mocha": "^5.2.0",
-    "onewallet.library.error": "git+https://github.com/Proto-Garage/onewallet.library.error.git",
+    "onewallet.library.error": "git+https://github.com/Proto-Garage/onewallet.library.error.git#0.0.2",
     "p-queue": "^3.0.0",
     "ramda": "^0.25.0",
     "retry": "^0.12.0",
