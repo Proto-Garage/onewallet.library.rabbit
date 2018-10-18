@@ -25,7 +25,7 @@ describe('RPC', () => {
 
   it('should send AppError to client', async () => {
     const handler = sinon.fake(async () => {
-      throw new AppError('TEST_ERROR', 'Test error');
+      throw new AppError('TEST_ERROR', 'Test error', { test: true });
     });
 
     const queue = 'test_queue';
@@ -35,7 +35,7 @@ describe('RPC', () => {
     const client = await rabbit.createClient(queue);
 
     try {
-      expect(client({}))
+      await expect(client({}))
         .to.eventually.throw()
         .to.has.property('code', 'TEST_ERROR');
     } catch (err) {}
@@ -53,7 +53,7 @@ describe('RPC', () => {
     const client = await rabbit.createClient(queue);
 
     try {
-      expect(client({}))
+      await expect(client({}))
         .to.eventually.throw()
         .to.has.property('code', 'SERVER_ERROR');
     } catch (err) {}

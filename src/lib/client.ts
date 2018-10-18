@@ -2,6 +2,7 @@ import { Connection, Channel } from 'amqplib';
 import { v1 as uuid } from 'uuid';
 import TaskQueue from 'p-queue';
 import AppError from 'onewallet.library.error';
+import R from 'ramda';
 
 import logger from './logger';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
@@ -131,7 +132,11 @@ export default class Client {
           } else if (response.error) {
             const { error } = response;
             callback.reject(
-              new AppError(error.code, error.message, error.meta)
+              new AppError(
+                error.code,
+                error.message,
+                R.omit(['code', 'message'])(error)
+              )
             );
           }
           this.callbacks.delete(correlationId);
