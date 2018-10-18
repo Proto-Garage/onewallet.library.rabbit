@@ -52,6 +52,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var uuid_1 = require("uuid");
 var p_queue_1 = __importDefault(require("p-queue"));
 var onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
+var ramda_1 = __importDefault(require("ramda"));
 var logger_1 = __importDefault(require("./logger"));
 var delay_1 = __importDefault(require("./delay"));
 var Client = (function () {
@@ -175,7 +176,7 @@ var Client = (function () {
                                         }
                                         else if (response.error) {
                                             error = response.error;
-                                            callback.reject(new onewallet_library_error_1.default(error.code, error.message, error.meta));
+                                            callback.reject(new onewallet_library_error_1.default(error.code, error.message, ramda_1.default.omit(['code', 'message'])(error)));
                                         }
                                         this.callbacks.delete(correlationId);
                                     }
