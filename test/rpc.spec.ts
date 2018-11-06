@@ -34,11 +34,10 @@ describe('RPC', () => {
 
     const client = await rabbit.createClient(queue);
 
-    try {
-      await expect(client({}))
-        .to.eventually.throw()
-        .to.has.property('code', 'TEST_ERROR');
-    } catch (err) {}
+    await expect(client({})).to.eventually.be.rejected.to.has.property(
+      'code',
+      'TEST_ERROR'
+    );
   });
 
   it('should not send Error to client', async () => {
@@ -52,11 +51,10 @@ describe('RPC', () => {
 
     const client = await rabbit.createClient(queue);
 
-    try {
-      await expect(client({}))
-        .to.eventually.throw()
-        .to.has.property('code', 'SERVER_ERROR');
-    } catch (err) {}
+    await expect(client({})).to.eventually.be.rejected.to.has.property(
+      'code',
+      'SERVER_ERROR'
+    );
   });
 
   it('should send request to worker', async () => {
@@ -72,6 +70,28 @@ describe('RPC', () => {
 
     expect(handler.calledOnce).to.be.equal(true);
     expect(result).to.deep.equal({ square: 9 });
+  });
+
+  it('should respond null', async () => {
+    const queue = 'test_queue';
+
+    await rabbit.createWorker(queue, () => Promise.resolve(null));
+
+    const client = await rabbit.createClient(queue);
+    const result = await client();
+
+    expect(result).to.be.equal(null);
+  });
+
+  it('should respond undefined', async () => {
+    const queue = 'test_queue';
+
+    await rabbit.createWorker(queue, () => Promise.resolve());
+
+    const client = await rabbit.createClient(queue);
+    const result = await client();
+
+    expect(result).to.be.equal(undefined);
   });
 
   it('should distribute requests to multile workers', async () => {

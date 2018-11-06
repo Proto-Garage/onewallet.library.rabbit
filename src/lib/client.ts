@@ -127,9 +127,7 @@ export default class Client {
 
         const callback = this.callbacks.get(correlationId);
         if (callback) {
-          if (response.result) {
-            callback.resolve(response.result);
-          } else if (response.error) {
+          if (response.error) {
             const { error } = response;
             callback.reject(
               new AppError(
@@ -138,7 +136,10 @@ export default class Client {
                 R.omit(['code', 'message'])(error)
               )
             );
+          } else {
+            callback.resolve(response.result);
           }
+
           this.callbacks.delete(correlationId);
         }
       },
