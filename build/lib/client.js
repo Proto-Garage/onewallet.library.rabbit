@@ -171,12 +171,12 @@ var Client = (function () {
                                         .verbose(response);
                                     callback = this.callbacks.get(correlationId);
                                     if (callback) {
-                                        if (response.result) {
-                                            callback.resolve(response.result);
-                                        }
-                                        else if (response.error) {
+                                        if (response.error) {
                                             error = response.error;
                                             callback.reject(new onewallet_library_error_1.default(error.code, error.message, ramda_1.default.omit(['code', 'message'])(error)));
+                                        }
+                                        else {
+                                            callback.resolve(response.result);
                                         }
                                         this.callbacks.delete(correlationId);
                                     }
