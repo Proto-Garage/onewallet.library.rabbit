@@ -98,7 +98,7 @@ var Client = (function () {
                                     logger_1.default
                                         .tag('client')
                                         .tag('request')
-                                        .verbose({ queue: this.queue, payloaod: request });
+                                        .verbose({ queue: this.queue, request: request });
                                     return [4, this.channel.sendToQueue(this.queue, new Buffer(JSON.stringify(request)), {
                                             correlationId: correlationId,
                                             replyTo: this.callback,
@@ -168,7 +168,7 @@ var Client = (function () {
                                     logger_1.default
                                         .tag('client')
                                         .tag('response')
-                                        .verbose({ payload: response });
+                                        .verbose({ response: response });
                                     callback = this.callbacks.get(correlationId);
                                     if (callback) {
                                         if (response.error) {

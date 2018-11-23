@@ -81,7 +81,7 @@ export default class Rabbit {
 
     const client = new Client(
       connection,
-      `${this.options.prefix}${scope}`,
+      `${this.options.prefix || ''}${scope}`,
       options
     );
     await client.start();
@@ -101,7 +101,7 @@ export default class Rabbit {
 
     const worker = new Worker(
       connection,
-      `${this.options.prefix}${scope}`,
+      `${this.options.prefix || ''}${scope}`,
       handler,
       options
     );

@@ -129,7 +129,7 @@ var Rabbit = (function () {
                     case 0: return [4, this.connecting];
                     case 1:
                         connection = _a.sent();
-                        client = new client_1.default(connection, "" + this.options.prefix + scope, options);
+                        client = new client_1.default(connection, "" + (this.options.prefix || '') + scope, options);
                         return [4, client.start()];
                     case 2:
                         _a.sent();
@@ -157,7 +157,7 @@ var Rabbit = (function () {
                     case 0: return [4, this.connecting];
                     case 1:
                         connection = _a.sent();
-                        worker = new worker_1.default(connection, "" + this.options.prefix + scope, handler, options);
+                        worker = new worker_1.default(connection, "" + (this.options.prefix || '') + scope, handler, options);
                         return [4, worker.start()];
                     case 2:
                         _a.sent();
