@@ -20,10 +20,9 @@ export default class Rabbit {
   private stopping: boolean = false;
   private options: {
     uri: string;
-    prefix: string;
+    prefix?: string;
   } = {
     uri: 'amqp://localhost',
-    prefix: '',
   };
   private channels: Array<Client | Worker | Publisher | Subscriber> = [];
   constructor(options?: RabbitOptions) {
@@ -117,7 +116,7 @@ export default class Rabbit {
 
     const publisher = new Publisher(
       connection,
-      `${this.options.prefix}${scope}`
+      `${this.options.prefix || ''}${scope}`
     );
     await publisher.start();
 
@@ -136,7 +135,7 @@ export default class Rabbit {
 
     const subscriber = new Subscriber(
       connection,
-      `${this.options.prefix}${scope}`,
+      `${this.options.prefix || ''}${scope}`,
       handler,
       options
     );

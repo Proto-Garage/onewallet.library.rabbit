@@ -74,7 +74,6 @@ var Rabbit = (function () {
         this.stopping = false;
         this.options = {
             uri: 'amqp://localhost',
-            prefix: '',
         };
         this.channels = [];
         if (options) {
@@ -176,7 +175,7 @@ var Rabbit = (function () {
                     case 0: return [4, this.connecting];
                     case 1:
                         connection = _a.sent();
-                        publisher = new publisher_1.default(connection, "" + this.options.prefix + scope);
+                        publisher = new publisher_1.default(connection, "" + (this.options.prefix || '') + scope);
                         return [4, publisher.start()];
                     case 2:
                         _a.sent();
@@ -204,7 +203,7 @@ var Rabbit = (function () {
                     case 0: return [4, this.connecting];
                     case 1:
                         connection = _a.sent();
-                        subscriber = new subscriber_1.default(connection, "" + this.options.prefix + scope, handler, options);
+                        subscriber = new subscriber_1.default(connection, "" + (this.options.prefix || '') + scope, handler, options);
                         return [4, subscriber.start()];
                     case 2:
                         _a.sent();
