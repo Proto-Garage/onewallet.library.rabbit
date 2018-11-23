@@ -56,7 +56,7 @@ export default class Client {
       logger
         .tag('client')
         .tag('request')
-        .verbose(request);
+        .verbose({ queue: this.queue, payloaod: request });
 
       await this.channel.sendToQueue(
         this.queue,
@@ -123,7 +123,7 @@ export default class Client {
         logger
           .tag('client')
           .tag('response')
-          .verbose(response);
+          .verbose({ payload: response });
 
         const callback = this.callbacks.get(correlationId);
         if (callback) {

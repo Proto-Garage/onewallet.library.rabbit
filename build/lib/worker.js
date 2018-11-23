@@ -103,7 +103,7 @@ var Worker = (function () {
                                                             logger_1.default
                                                                 .tag('worker')
                                                                 .tag('request')
-                                                                .verbose(request);
+                                                                .verbose({ queue: this.queue, payload: request });
                                                             response = { correlationId: correlationId };
                                                             _a.label = 1;
                                                         case 1:

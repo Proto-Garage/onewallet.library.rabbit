@@ -55,7 +55,7 @@ export default class Worker {
           logger
             .tag('worker')
             .tag('request')
-            .verbose(request);
+            .verbose({ queue: this.queue, payload: request });
 
           let response: ResponseMessage = { correlationId };
           try {
