@@ -9,7 +9,7 @@ export default class Subscriber {
     private options;
     private topics;
     private queue;
-    constructor(connection: Connection, exchange: string, handler: () => Promise<any>, options?: SubscriberOptions);
+    constructor(connection: Connection, exchange: string, handler: (...args: any[]) => Promise<any>, options?: SubscriberOptions);
     addTopic(topic: string): Promise<void>;
     start(): Promise<void>;
     stop(): Promise<void>;

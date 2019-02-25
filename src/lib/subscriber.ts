@@ -22,7 +22,7 @@ export default class Subscriber {
   constructor(
     public connection: Connection,
     private exchange: string,
-    private handler: () => Promise<any>,
+    private handler: (...args: any[]) => Promise<any>,
     options?: SubscriberOptions
   ) {
     if (options) {

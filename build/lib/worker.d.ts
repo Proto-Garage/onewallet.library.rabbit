@@ -7,7 +7,7 @@ export default class Worker {
     private channel;
     private taskQueue;
     private options;
-    constructor(connection: Connection, queue: string, handler: () => Promise<any>, options?: WorkerOptions);
+    constructor(connection: Connection, queue: string, handler: (...args: any[]) => Promise<any>, options?: WorkerOptions);
     start(): Promise<void>;
     stop(): Promise<void>;
 }

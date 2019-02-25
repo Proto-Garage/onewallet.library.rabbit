@@ -15,7 +15,7 @@ export default class Worker {
   constructor(
     public connection: Connection,
     private queue: string,
-    private handler: () => Promise<any>,
+    private handler: (...args: any[]) => Promise<any>,
     options?: WorkerOptions
   ) {
     if (options) {

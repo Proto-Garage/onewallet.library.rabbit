@@ -15,9 +15,9 @@ export default class Rabbit {
     private options;
     private channels;
     constructor(options?: RabbitOptions);
-    createClient(scope: string, options?: ClientOptions): Promise<(...args: any[]) => Promise<any>>;
+    createClient(scope: string, options?: ClientOptions): Promise<(...args: any[]) => Promise<{} | undefined>>;
     createWorker(scope: string, handler: (...args: Array<any>) => Promise<any>, options?: WorkerOptions): Promise<Worker>;
-    createPublisher(scope: string): Promise<(topic: string, ...args: any[]) => Promise<any>>;
+    createPublisher(scope: string): Promise<(topic: string, ...args: any[]) => Promise<void>>;
     createSubscriber(scope: string, handler: (...args: Array<any>) => Promise<any>, options?: SubscriberOptions): Promise<Subscriber>;
     stop(): Promise<void>;
 }

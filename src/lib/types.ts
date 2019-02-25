@@ -1,6 +1,6 @@
 export interface RequestMessage {
   correlationId: string;
-  arguments: Array<any>;
+  arguments: any[];
   noResponse: boolean;
   timestamp: number;
 }
@@ -18,7 +18,7 @@ export interface ResponseMessage {
 }
 
 export interface PublishMessage {
-  arguments: Array<any>;
+  arguments: any[];
   timestamp: number;
 }
 
