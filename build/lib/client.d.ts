@@ -1,7 +1,7 @@
 import { Connection, Channel } from 'amqplib';
 import { ClientOptions } from './types';
 export default class Client {
-    connection: Connection;
+    private connection;
     private queue;
     channel: Channel | null;
     private callback;
@@ -9,8 +9,8 @@ export default class Client {
     private taskQueue;
     private options;
     constructor(connection: Connection, queue: string, options?: ClientOptions);
-    send(...args: Array<any>): Promise<{} | undefined>;
-    start(): Promise<void>;
+    send<TInput extends any[], TOutput>(...args: TInput): Promise<TOutput | undefined>;
+    start(connection?: Connection): Promise<void>;
     stop(): Promise<void>;
 }
 //# sourceMappingURL=client.d.ts.map

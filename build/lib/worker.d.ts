@@ -8,7 +8,7 @@ export default class Worker {
     private taskQueue;
     private options;
     constructor(connection: Connection, queue: string, handler: (...args: any[]) => Promise<any>, options?: WorkerOptions);
-    start(): Promise<void>;
+    start(connection?: Connection): Promise<void>;
     stop(): Promise<void>;
 }
 //# sourceMappingURL=worker.d.ts.map

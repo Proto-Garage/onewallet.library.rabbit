@@ -65,13 +65,17 @@ var Worker = (function () {
         }
         this.taskQueue = new p_queue_1.default();
     }
-    Worker.prototype.start = function () {
+    Worker.prototype.start = function (connection) {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        logger_1.default.tag('worker').verbose('starting');
+                        if (connection) {
+                            this.connection = connection;
+                        }
                         _a = this;
                         return [4, this.connection.createChannel()];
                     case 1:
@@ -152,6 +156,7 @@ var Worker = (function () {
                             }); }, { noAck: false })];
                     case 4:
                         _b.sent();
+                        logger_1.default.tag('worker').verbose('started');
                         return [2];
                 }
             });

@@ -27,8 +27,15 @@ export default class Worker {
 
     this.taskQueue = new TaskQueue();
   }
-  async start() {
+  async start(connection?: Connection) {
+    logger.tag('worker').verbose('starting');
+
+    if (connection) {
+      this.connection = connection;
+    }
+
     this.channel = await this.connection.createChannel();
+
     await this.channel.assertQueue(this.queue, {
       exclusive: false,
       durable: true,
@@ -97,6 +104,8 @@ export default class Worker {
       },
       { noAck: false }
     );
+
+    logger.tag('worker').verbose('started');
   }
   async stop() {
     await this.taskQueue.onEmpty();

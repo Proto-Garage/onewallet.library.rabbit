@@ -6,7 +6,7 @@ import { PublishMessage } from './types';
 
 export default class Publisher {
   public channel: Channel | null = null;
-  constructor(public connection: Connection, private exchange: string) {}
+  constructor(private connection: Connection, private exchange: string) {}
 
   async send(topic: string, ...args: Array<any>) {
     if (!this.channel) {
@@ -26,12 +26,20 @@ export default class Publisher {
     );
   }
 
-  async start() {
+  async start(connection?: Connection) {
+    logger.tag('publisher').verbose('starting');
+
+    if (connection) {
+      this.connection = connection;
+    }
+
     this.channel = await this.connection.createChannel();
 
     await this.channel.assertExchange(this.exchange, 'topic', {
       durable: true,
     });
+
+    logger.tag('publisher').verbose('started');
   }
 
   async stop() {

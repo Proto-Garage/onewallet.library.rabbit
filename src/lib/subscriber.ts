@@ -44,7 +44,13 @@ export default class Subscriber {
     this.topics.push(topic);
     await this.channel.bindQueue(this.queue, this.exchange, topic);
   }
-  async start() {
+  async start(connection?: Connection) {
+    logger.tag('subscriber').verbose('starting');
+
+    if (connection) {
+      this.connection = connection;
+    }
+
     this.channel = await this.connection.createChannel();
 
     await this.channel.assertQueue(this.queue, {
@@ -95,6 +101,8 @@ export default class Subscriber {
       },
       { noAck: false }
     );
+
+    logger.tag('subscriber').verbose('started');
   }
   async stop() {
     await this.taskQueue.onEmpty();

@@ -33,50 +33,53 @@ export default class Rabbit {
       };
     }
 
-    const establishConnection = async () => {
-      return new Promise<Connection>(resolve => {
+    const establishConnection = () =>
+      new Promise<Connection>(resolve => {
         const operation = retry.operation({
           forever: true,
           factor: 2,
           minTimeout: 1000,
-          maxTimeout: 10000,
+          maxTimeout: 30000,
           randomize: true,
         });
-        operation.attempt(() => {
-          connect(this.options.uri)
-            .then(connection => {
-              connection.on('close', () => {
-                logger.info('disconnected');
-                if (!this.stopping) {
-                  this.connecting = establishConnection();
-                }
-              });
+        operation.attempt(async () => {
+          logger.info('establishing connection');
 
-              connection.on('error', err => {
-                logger.error(err.message);
-              });
+          try {
+            const connection = await connect(this.options.uri);
 
-              for (const channel of this.channels) {
-                channel.connection = connection;
-                channel.start();
+            connection.on('close', () => {
+              logger.info('disconnected');
+              if (!this.stopping) {
+                this.connecting = establishConnection();
               }
-
-              logger.info('connected');
-              this.connection = connection;
-              resolve(connection);
-            })
-            .catch(err => {
-              logger.error(err.message);
-              operation.retry(err);
             });
+
+            connection.on('error', err => {
+              logger.error(err.message);
+            });
+
+            for (const channel of this.channels) {
+              channel.start(connection);
+            }
+
+            logger.info('connected');
+            this.connection = connection;
+            resolve(connection);
+          } catch (err) {
+            logger.error(err.message);
+            operation.retry(err);
+          }
         });
       });
-    };
 
     this.connecting = establishConnection();
   }
 
-  async createClient(scope: string, options?: ClientOptions) {
+  async createClient<TInput extends any[] = any[], TOutput = any>(
+    scope: string,
+    options?: ClientOptions
+  ) {
     const connection = await this.connecting;
 
     const client = new Client(
@@ -88,10 +91,9 @@ export default class Rabbit {
 
     this.channels.push(client);
 
-    return async function(...args: Array<any>) {
-      return client.send.apply(client, args);
-    };
+    return (...args: TInput) => client.send<TInput, TOutput>(...args);
   }
+
   async createWorker(
     scope: string,
     handler: (...args: Array<any>) => Promise<any>,

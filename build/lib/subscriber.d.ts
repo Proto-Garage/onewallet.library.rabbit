@@ -11,7 +11,7 @@ export default class Subscriber {
     private queue;
     constructor(connection: Connection, exchange: string, handler: (...args: any[]) => Promise<any>, options?: SubscriberOptions);
     addTopic(topic: string): Promise<void>;
-    start(): Promise<void>;
+    start(connection?: Connection): Promise<void>;
     stop(): Promise<void>;
 }
 //# sourceMappingURL=subscriber.d.ts.map

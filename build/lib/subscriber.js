@@ -87,13 +87,17 @@ var Subscriber = (function () {
             });
         });
     };
-    Subscriber.prototype.start = function () {
+    Subscriber.prototype.start = function (connection) {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        logger_1.default.tag('subscriber').verbose('starting');
+                        if (connection) {
+                            this.connection = connection;
+                        }
                         _a = this;
                         return [4, this.connection.createChannel()];
                     case 1:
@@ -171,6 +175,7 @@ var Subscriber = (function () {
                             }); }, { noAck: false })];
                     case 6:
                         _b.sent();
+                        logger_1.default.tag('subscriber').verbose('started');
                         return [2];
                 }
             });

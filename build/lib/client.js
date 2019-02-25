@@ -136,13 +136,17 @@ var Client = (function () {
             });
         });
     };
-    Client.prototype.start = function () {
+    Client.prototype.start = function (connection) {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        logger_1.default.tag('client').verbose('starting');
+                        if (connection) {
+                            this.connection = connection;
+                        }
                         _a = this;
                         return [4, this.connection.createChannel()];
                     case 1:
@@ -185,6 +189,7 @@ var Client = (function () {
                             }); }, { noAck: true })];
                     case 3:
                         _b.sent();
+                        logger_1.default.tag('client').verbose('started');
                         return [2];
                 }
             });

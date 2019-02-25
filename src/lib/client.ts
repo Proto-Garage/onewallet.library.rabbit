@@ -21,7 +21,7 @@ export default class Client {
     noResponse: false,
   };
   constructor(
-    public connection: Connection,
+    private connection: Connection,
     private queue: string,
     options?: ClientOptions
   ) {
@@ -38,7 +38,9 @@ export default class Client {
     this.taskQueue = new TaskQueue();
   }
 
-  async send(...args: Array<any>) {
+  async send<TInput extends any[], TOutput>(
+    ...args: TInput
+  ): Promise<TOutput | undefined> {
     return this.taskQueue.add(async () => {
       if (!this.channel) {
         throw new AppError('CHANNEL_NOT_READY', 'Channel not started.');
@@ -73,7 +75,7 @@ export default class Client {
         return;
       }
 
-      const promise = new Promise((resolve, reject) => {
+      const promise = new Promise<TOutput>((resolve, reject) => {
         this.callbacks.set(correlationId, { resolve, reject });
       });
 
@@ -92,7 +94,13 @@ export default class Client {
     });
   }
 
-  async start() {
+  async start(connection?: Connection) {
+    logger.tag('client').verbose('starting');
+
+    if (connection) {
+      this.connection = connection;
+    }
+
     this.channel = await this.connection.createChannel();
 
     if (this.options.noResponse) {
@@ -145,6 +153,8 @@ export default class Client {
       },
       { noAck: true }
     );
+
+    logger.tag('client').verbose('started');
   }
 
   async stop() {

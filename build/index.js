@@ -79,20 +79,28 @@ var Rabbit = (function () {
         if (options) {
             this.options = __assign({}, this.options, options);
         }
-        var establishConnection = function () { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2, new Promise(function (resolve) {
-                        var operation = retry.operation({
-                            forever: true,
-                            factor: 2,
-                            minTimeout: 1000,
-                            maxTimeout: 10000,
-                            randomize: true,
-                        });
-                        operation.attempt(function () {
-                            amqplib_1.connect(_this.options.uri)
-                                .then(function (connection) {
+        var establishConnection = function () {
+            return new Promise(function (resolve) {
+                var operation = retry.operation({
+                    forever: true,
+                    factor: 2,
+                    minTimeout: 1000,
+                    maxTimeout: 30000,
+                    randomize: true,
+                });
+                operation.attempt(function () { return __awaiter(_this, void 0, void 0, function () {
+                    var connection, _i, _a, channel, err_1;
+                    var _this = this;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
+                            case 0:
+                                logger_1.default.info('establishing connection');
+                                _b.label = 1;
+                            case 1:
+                                _b.trys.push([1, 3, , 4]);
+                                return [4, amqplib_1.connect(this.options.uri)];
+                            case 2:
+                                connection = _b.sent();
                                 connection.on('close', function () {
                                     logger_1.default.info('disconnected');
                                     if (!_this.stopping) {
@@ -102,23 +110,25 @@ var Rabbit = (function () {
                                 connection.on('error', function (err) {
                                     logger_1.default.error(err.message);
                                 });
-                                for (var _i = 0, _a = _this.channels; _i < _a.length; _i++) {
-                                    var channel = _a[_i];
-                                    channel.connection = connection;
-                                    channel.start();
+                                for (_i = 0, _a = this.channels; _i < _a.length; _i++) {
+                                    channel = _a[_i];
+                                    channel.start(connection);
                                 }
                                 logger_1.default.info('connected');
-                                _this.connection = connection;
+                                this.connection = connection;
                                 resolve(connection);
-                            })
-                                .catch(function (err) {
-                                logger_1.default.error(err.message);
-                                operation.retry(err);
-                            });
-                        });
-                    })];
+                                return [3, 4];
+                            case 3:
+                                err_1 = _b.sent();
+                                logger_1.default.error(err_1.message);
+                                operation.retry(err_1);
+                                return [3, 4];
+                            case 4: return [2];
+                        }
+                    });
+                }); });
             });
-        }); };
+        };
         this.connecting = establishConnection();
     }
     Rabbit.prototype.createClient = function (scope, options) {
@@ -139,11 +149,7 @@ var Rabbit = (function () {
                                 for (var _i = 0; _i < arguments.length; _i++) {
                                     args[_i] = arguments[_i];
                                 }
-                                return __awaiter(this, void 0, void 0, function () {
-                                    return __generator(this, function (_a) {
-                                        return [2, client.send.apply(client, args)];
-                                    });
-                                });
+                                return client.send.apply(client, args);
                             }];
                 }
             });
