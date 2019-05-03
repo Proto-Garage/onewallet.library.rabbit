@@ -124,11 +124,11 @@ var Worker = (function () {
                                                             return [3, 5];
                                                         case 4:
                                                             err_1 = _a.sent();
+                                                            logger_1.default.tag('worker').error(err_1);
                                                             if (err_1.name === 'AppError') {
                                                                 response.error = err_1.toJSON();
                                                             }
                                                             else {
-                                                                logger_1.default.tag('worker').error(err_1);
                                                                 response.error = {
                                                                     code: 'SERVER_ERROR',
                                                                     message: 'Internal server error',

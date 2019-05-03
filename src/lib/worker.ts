@@ -77,11 +77,11 @@ export default class Worker {
 
             response.result = result;
           } catch (err) {
+            logger.tag('worker').error(err);
+
             if (err.name === 'AppError') {
               response.error = err.toJSON();
             } else {
-              logger.tag('worker').error(err);
-
               response.error = {
                 code: 'SERVER_ERROR',
                 message: 'Internal server error',
