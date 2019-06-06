@@ -26,8 +26,8 @@
     "rimraf": "^2.6.2",
     "sinon": "^6.2.0",
     "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "typescript": "^3.3.3333"
+    "tslint": "^5.17.0",
+    "typescript": "~3.4.5"
   },
   "dependencies": {
     "@types/amqplib": "^0.5.10",
