@@ -1,3 +1,4 @@
+export * from './lib/types';
 import Client from './lib/client';
 import Worker from './lib/worker';
 import Publisher from './lib/publisher';
