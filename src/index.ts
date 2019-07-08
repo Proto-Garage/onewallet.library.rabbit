@@ -51,6 +51,7 @@ export default class Rabbit {
         maxTimeout: 30000,
         randomize: true,
       });
+
       operation.attempt(async () => {
         logger.info('establishing connection');
 
@@ -68,7 +69,7 @@ export default class Rabbit {
             logger.error(err.message);
           });
 
-          this.channels.map(channel => channel.start(connection));
+          await Promise.all(this.channels.map(channel => channel.start(connection)));
 
           logger.info('connected');
           this.connection = connection;

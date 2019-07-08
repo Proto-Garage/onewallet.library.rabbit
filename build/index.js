@@ -53,7 +53,7 @@ class Rabbit {
                     connection.on('error', (err) => {
                         logger_1.default.error(err.message);
                     });
-                    this.channels.map(channel => channel.start(connection));
+                    await Promise.all(this.channels.map(channel => channel.start(connection)));
                     logger_1.default.info('connected');
                     this.connection = connection;
                     resolve(connection);
