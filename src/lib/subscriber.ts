@@ -8,7 +8,11 @@ import { SubscriberOptions, PublishMessage } from './types';
 
 export default class Subscriber {
   private channel: Channel | null = null;
-  private taskQueue: TaskQueue;
+
+  private taskQueue = new TaskQueue();
+
+  private connection: Connection;
+
   private options: {
     topics: string[];
     queue?: string;
@@ -17,12 +21,15 @@ export default class Subscriber {
     topics: [],
     concurrency: 1,
   };
+
   private topics: string[];
+
   private queue: string;
-  constructor(
-    public connection: Connection,
-    private exchange: string,
-    private handler: (...args: any[]) => Promise<any>,
+
+  public constructor(
+    connection: Connection,
+    private readonly exchange: string,
+    private readonly handler: (...args: any[]) => Promise<any>,
     options?: SubscriberOptions
   ) {
     if (options) {
@@ -32,11 +39,12 @@ export default class Subscriber {
       };
     }
 
+    this.connection = connection;
     this.queue = `subscriber.${this.options.queue || uuid().replace('-', '')}`;
     this.topics = this.options.topics;
-    this.taskQueue = new TaskQueue();
   }
-  async addTopic(topic: string) {
+
+  public async addTopic(topic: string) {
     if (!this.channel) {
       throw new AppError('CHANNEL_NOT_READY', 'Channel is not ready.');
     }
@@ -44,7 +52,8 @@ export default class Subscriber {
     this.topics.push(topic);
     await this.channel.bindQueue(this.queue, this.exchange, topic);
   }
-  async start(connection?: Connection) {
+
+  public async start(connection?: Connection) {
     logger.tag('subscriber').verbose('starting');
 
     if (connection) {
@@ -63,7 +72,7 @@ export default class Subscriber {
     });
 
     await Promise.all(
-      this.topics.map(async topic => {
+      this.topics.map(async (topic) => {
         if (this.channel) {
           await this.channel.bindQueue(this.queue, this.exchange, topic);
         }
@@ -74,7 +83,7 @@ export default class Subscriber {
 
     await this.channel.consume(
       this.queue,
-      async message => {
+      async (message) => {
         await this.taskQueue.add(async () => {
           if (!message || !this.channel) {
             return;
@@ -89,12 +98,14 @@ export default class Subscriber {
             let result = this.handler.apply(this.handler, payload.arguments);
 
             if (
-              !(result === null || result === undefined) &&
-              typeof result.then === 'function'
+              !(result === null || result === undefined)
+              && typeof result.then === 'function'
             ) {
               result = await result;
             }
-          } catch (err) {}
+          } catch (err) {
+            logger.tag('subscriber').warn(err);
+          }
 
           await this.channel.ack(message);
         });
@@ -104,7 +115,8 @@ export default class Subscriber {
 
     logger.tag('subscriber').verbose('started');
   }
-  async stop() {
+
+  public async stop() {
     await this.taskQueue.onEmpty();
     if (this.channel) {
       await this.channel.close();

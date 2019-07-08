@@ -1,10 +1,10 @@
 import { Connection, Channel } from 'amqplib';
 export default class Publisher {
-    private connection;
-    private exchange;
+    private readonly exchange;
     channel: Channel | null;
+    private connection;
     constructor(connection: Connection, exchange: string);
-    send(topic: string, ...args: Array<any>): Promise<void>;
+    send(topic: string, ...args: any[]): Promise<void>;
     start(connection?: Connection): Promise<void>;
     stop(): Promise<void>;
 }

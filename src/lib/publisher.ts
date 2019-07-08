@@ -6,9 +6,14 @@ import { PublishMessage } from './types';
 
 export default class Publisher {
   public channel: Channel | null = null;
-  constructor(private connection: Connection, private exchange: string) {}
 
-  async send(topic: string, ...args: Array<any>) {
+  private connection: Connection;
+
+  public constructor(connection: Connection, private readonly exchange: string) {
+    this.connection = connection;
+  }
+
+  public async send(topic: string, ...args: any[]) {
     if (!this.channel) {
       throw new AppError('CHANNEL_NOT_READY', 'Channel not started.');
     }
@@ -21,12 +26,12 @@ export default class Publisher {
     await this.channel.publish(
       this.exchange,
       topic,
-      new Buffer(JSON.stringify(payload)),
+      Buffer.from(JSON.stringify(payload)),
       { persistent: true }
     );
   }
 
-  async start(connection?: Connection) {
+  public async start(connection?: Connection) {
     logger.tag('publisher').verbose('starting');
 
     if (connection) {
@@ -42,7 +47,7 @@ export default class Publisher {
     logger.tag('publisher').verbose('started');
   }
 
-  async stop() {
+  public async stop() {
     if (this.channel) {
       await this.channel.close();
     }

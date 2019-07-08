@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function default_1(duration) {
-    return new Promise(function (resolve) {
+    return new Promise((resolve) => {
         setTimeout(resolve, duration);
     });
 }

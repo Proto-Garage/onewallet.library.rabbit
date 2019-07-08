@@ -6,16 +6,21 @@ import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
 
 export default class Worker {
   private channel: Channel | null = null;
-  private taskQueue: TaskQueue;
+
+  private taskQueue = new TaskQueue();
+
   private options: {
     concurrency: number;
   } = {
     concurrency: 1,
   };
-  constructor(
-    public connection: Connection,
-    private queue: string,
-    private handler: (...args: any[]) => Promise<any>,
+
+  private connection: Connection;
+
+  public constructor(
+    connection: Connection,
+    private readonly queue: string,
+    private readonly handler: (...args: any[]) => Promise<any>,
     options?: WorkerOptions
   ) {
     if (options) {
@@ -25,9 +30,10 @@ export default class Worker {
       };
     }
 
-    this.taskQueue = new TaskQueue();
+    this.connection = connection;
   }
-  async start(connection?: Connection) {
+
+  public async start(connection?: Connection) {
     logger.tag('worker').verbose('starting');
 
     if (connection) {
@@ -45,7 +51,7 @@ export default class Worker {
 
     await this.channel.consume(
       this.queue,
-      async message => {
+      async (message) => {
         await this.taskQueue.add(async () => {
           if (!message || !this.channel) {
             return;
@@ -64,13 +70,13 @@ export default class Worker {
             .tag('request')
             .verbose({ queue: this.queue, request });
 
-          let response: ResponseMessage = { correlationId };
+          const response: ResponseMessage = { correlationId };
           try {
             let result = this.handler.apply(this.handler, request.arguments);
 
             if (
-              !(result === null || result === undefined) &&
-              typeof result.then === 'function'
+              !(result === null || result === undefined)
+              && typeof result.then === 'function'
             ) {
               result = await result;
             }
@@ -97,7 +103,7 @@ export default class Worker {
 
           await this.channel.sendToQueue(
             message.properties.replyTo,
-            new Buffer(JSON.stringify(response)),
+            Buffer.from(JSON.stringify(response)),
             { correlationId, persistent: true }
           );
         });
@@ -107,7 +113,8 @@ export default class Worker {
 
     logger.tag('worker').verbose('started');
   }
-  async stop() {
+
+  public async stop() {
     await this.taskQueue.onEmpty();
     if (this.channel) {
       await this.channel.close();

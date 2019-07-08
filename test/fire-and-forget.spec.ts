@@ -63,9 +63,8 @@ describe('Fire and Forget', () => {
         R.map<sinon.SinonSpy, number>(R.prop('callCount'))
       )(handlers)
     ).to.be.equal(20);
-    for (const handler of handlers) {
-      expect(handler.callCount).to.be.greaterThan(0);
-    }
+
+    handlers.map(handler => expect(handler.callCount).to.be.greaterThan(0));
   });
 
   it('should send messages from multiple clients', async () => {

@@ -48,10 +48,11 @@ describe('PubSub', () => {
     const message = { message: 'Hello World!' };
     await publish('topic', message);
     await delay(100);
-    for (const handler of handlers) {
+
+    handlers.map((handler) => {
       expect(handler.calledOnce).to.equal(true);
       expect(handler.args[0][0]).to.deep.equal(message);
-    }
+    });
   });
 
   it('should receive messages from multiple publishers with different topics', async () => {
@@ -62,9 +63,7 @@ describe('PubSub', () => {
 
     const publish = await rabbit.createPublisher(exchange);
     await Promise.all(
-      R.times(async index =>
-        publish(`topic${index}`, { message: 'Hello World!' })
-      )(5)
+      R.times(async index => publish(`topic${index}`, { message: 'Hello World!' }))(5)
     );
     await delay(100);
     expect(handler.callCount).to.be.equal(5);

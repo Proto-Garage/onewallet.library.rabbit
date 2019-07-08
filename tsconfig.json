@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "module": "commonjs",
     "declaration": true,
     "declarationMap": true,
@@ -18,7 +18,12 @@
     "noUnusedParameters": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "lib": ["es7", "es2016.array.include"]
+    "lib": [
+      "esnext",
+      "dom"
+    ]
   },
-  "include": ["src/**/*", "@types/**/*.d.ts"]
+  "include": [
+    "src/**/*"
+  ]
 }

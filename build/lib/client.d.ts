@@ -1,12 +1,12 @@
 import { Connection, Channel } from 'amqplib';
 import { ClientOptions } from './types';
 export default class Client {
-    private connection;
-    private queue;
+    private readonly queue;
     channel: Channel | null;
-    private callback;
-    private callbacks;
-    private taskQueue;
+    private readonly callback;
+    private readonly callbacks;
+    private readonly taskQueue;
+    private connection;
     private options;
     constructor(connection: Connection, queue: string, options?: ClientOptions);
     send<TInput extends any[], TOutput>(...args: TInput): Promise<TOutput | undefined>;

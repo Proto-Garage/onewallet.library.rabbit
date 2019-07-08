@@ -10,9 +10,15 @@ import delay from './delay';
 
 export default class Client {
   public channel: Channel | null = null;
-  private callback: string;
-  private callbacks: Map<string, { resolve: Function; reject: Function }>;
-  private taskQueue: TaskQueue;
+
+  private readonly callback = `callback.${uuid().replace('-', '')}`
+
+  private readonly callbacks = new Map<string, { resolve: Function; reject: Function }>();
+
+  private readonly taskQueue = new TaskQueue();
+
+  private connection: Connection;
+
   private options: {
     timeout: number;
     noResponse: boolean;
@@ -20,9 +26,10 @@ export default class Client {
     timeout: 60000,
     noResponse: false,
   };
-  constructor(
-    private connection: Connection,
-    private queue: string,
+
+  public constructor(
+    connection: Connection,
+    private readonly queue: string,
     options?: ClientOptions
   ) {
     if (options) {
@@ -32,13 +39,10 @@ export default class Client {
       };
     }
 
-    this.callback = `callback.${uuid().replace('-', '')}`;
-    this.callbacks = new Map();
-
-    this.taskQueue = new TaskQueue();
+    this.connection = connection;
   }
 
-  async send<TInput extends any[], TOutput>(
+  public async send<TInput extends any[], TOutput>(
     ...args: TInput
   ): Promise<TOutput | undefined> {
     return this.taskQueue.add(async () => {
@@ -62,7 +66,7 @@ export default class Client {
 
       await this.channel.sendToQueue(
         this.queue,
-        new Buffer(JSON.stringify(request)),
+        Buffer.from(JSON.stringify(request)),
         {
           correlationId,
           replyTo: this.callback,
@@ -79,10 +83,12 @@ export default class Client {
         this.callbacks.set(correlationId, { resolve, reject });
       });
 
+      // eslint-disable-next-line consistent-return
       return Promise.race([
         promise,
         (async () => {
           await delay(this.options.timeout);
+
           this.callbacks.delete(correlationId);
 
           throw new AppError('TIMEOUT', 'Request timeout.', {
@@ -94,7 +100,7 @@ export default class Client {
     });
   }
 
-  async start(connection?: Connection) {
+  public async start(connection?: Connection) {
     logger.tag('client').verbose('starting');
 
     if (connection) {
@@ -115,7 +121,7 @@ export default class Client {
 
     await this.channel.consume(
       this.callback,
-      async message => {
+      async (message) => {
         if (!message) {
           return;
         }
@@ -157,7 +163,7 @@ export default class Client {
     logger.tag('client').verbose('started');
   }
 
-  async stop() {
+  public async stop() {
     await this.taskQueue.onEmpty();
     if (this.channel) {
       await this.channel.close();

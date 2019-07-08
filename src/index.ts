@@ -1,5 +1,3 @@
-export * from './lib/types';
-
 import { Connection, connect } from 'amqplib';
 import * as retry from 'retry';
 
@@ -10,25 +8,34 @@ import Publisher from './lib/publisher';
 import Subscriber from './lib/subscriber';
 import { ClientOptions, WorkerOptions, SubscriberOptions } from './lib/types';
 
+export * from './lib/types';
+
 interface RabbitOptions {
   uri?: string;
   prefix?: string;
 }
 
-export { Client, Worker, Publisher, Subscriber };
+export {
+  Client, Worker, Publisher, Subscriber,
+};
 
 export default class Rabbit {
   private connecting: Promise<Connection>;
+
   private connection: Connection | null = null;
+
   private stopping: boolean = false;
+
   private options: {
     uri: string;
     prefix?: string;
   } = {
     uri: 'amqp://localhost',
   };
-  private channels: Array<Client | Worker | Publisher | Subscriber> = [];
-  constructor(options?: RabbitOptions) {
+
+  private channels: (Client | Worker | Publisher | Subscriber)[] = [];
+
+  public constructor(options?: RabbitOptions) {
     if (options) {
       this.options = {
         ...this.options,
@@ -36,50 +43,47 @@ export default class Rabbit {
       };
     }
 
-    const establishConnection = () =>
-      new Promise<Connection>(resolve => {
-        const operation = retry.operation({
-          forever: true,
-          factor: 2,
-          minTimeout: 1000,
-          maxTimeout: 30000,
-          randomize: true,
-        });
-        operation.attempt(async () => {
-          logger.info('establishing connection');
-
-          try {
-            const connection = await connect(this.options.uri);
-
-            connection.on('close', () => {
-              logger.info('disconnected');
-              if (!this.stopping) {
-                this.connecting = establishConnection();
-              }
-            });
-
-            connection.on('error', err => {
-              logger.error(err.message);
-            });
-
-            for (const channel of this.channels) {
-              channel.start(connection);
-            }
-
-            logger.info('connected');
-            this.connection = connection;
-            resolve(connection);
-          } catch (err) {
-            logger.error(err.message);
-            operation.retry(err);
-          }
-        });
+    const establishConnection = () => new Promise<Connection>((resolve) => {
+      const operation = retry.operation({
+        forever: true,
+        factor: 2,
+        minTimeout: 1000,
+        maxTimeout: 30000,
+        randomize: true,
       });
+      operation.attempt(async () => {
+        logger.info('establishing connection');
+
+        try {
+          const connection = await connect(this.options.uri);
+
+          connection.on('close', () => {
+            logger.info('disconnected');
+            if (!this.stopping) {
+              this.connecting = establishConnection();
+            }
+          });
+
+          connection.on('error', (err) => {
+            logger.error(err.message);
+          });
+
+          this.channels.map(channel => channel.start(connection));
+
+          logger.info('connected');
+          this.connection = connection;
+          resolve(connection);
+        } catch (err) {
+          logger.error(err.message);
+          operation.retry(err);
+        }
+      });
+    });
 
     this.connecting = establishConnection();
   }
 
-  async createClient<TInput extends any[] = any[], TOutput = any>(
+  public async createClient<TInput extends any[] = any[], TOutput = any>(
     scope: string,
     options?: ClientOptions
   ) {
@@ -97,9 +101,9 @@ export default class Rabbit {
     return (...args: TInput) => client.send<TInput, TOutput>(...args);
   }
 
-  async createWorker(
+  public async createWorker(
     scope: string,
-    handler: (...args: Array<any>) => Promise<any>,
+    handler: (...args: any[]) => Promise<any>,
     options?: WorkerOptions
   ) {
     const connection = await this.connecting;
@@ -116,7 +120,8 @@ export default class Rabbit {
 
     return worker;
   }
-  async createPublisher(scope: string) {
+
+  public async createPublisher(scope: string) {
     const connection = await this.connecting;
 
     const publisher = new Publisher(
@@ -127,13 +132,14 @@ export default class Rabbit {
 
     this.channels.push(publisher);
 
-    return async function(topic: string, ...args: Array<any>) {
+    return async function publish(topic: string, ...args: any[]) {
       return publisher.send.apply(publisher, [topic, ...args]);
     };
   }
-  async createSubscriber(
+
+  public async createSubscriber(
     scope: string,
-    handler: (...args: Array<any>) => Promise<any>,
+    handler: (...args: any[]) => Promise<any>,
     options?: SubscriberOptions
   ) {
     const connection = await this.connecting;
@@ -150,7 +156,8 @@ export default class Rabbit {
 
     return subscriber;
   }
-  async stop() {
+
+  public async stop() {
     this.stopping = true;
     await Promise.all(this.channels.map(channel => channel.stop()));
     if (this.connection) {
