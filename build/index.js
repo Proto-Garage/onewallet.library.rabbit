@@ -21,6 +21,10 @@ const publisher_1 = __importDefault(require("./lib/publisher"));
 exports.Publisher = publisher_1.default;
 const subscriber_1 = __importDefault(require("./lib/subscriber"));
 exports.Subscriber = subscriber_1.default;
+const serialize_1 = __importDefault(require("./lib/serialize"));
+exports.serialize = serialize_1.default;
+const deserialize_1 = __importDefault(require("./lib/deserialize"));
+exports.deserialize = deserialize_1.default;
 class Rabbit {
     constructor(options) {
         this.connection = null;

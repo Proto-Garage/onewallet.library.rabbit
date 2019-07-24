@@ -6,8 +6,11 @@ import Client from './lib/client';
 import Worker from './lib/worker';
 import Publisher from './lib/publisher';
 import Subscriber from './lib/subscriber';
+import serialize from './lib/serialize';
+import deserialize from './lib/deserialize';
 import { ClientOptions, WorkerOptions, SubscriberOptions } from './lib/types';
 
+export { serialize, deserialize };
 export * from './lib/types';
 
 interface RabbitOptions {
