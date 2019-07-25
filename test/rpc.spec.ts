@@ -94,6 +94,35 @@ describe('RPC', () => {
     expect(result).to.be.equal(undefined);
   });
 
+  it('should send request with Date object', async () => {
+    const queue = 'test_queue';
+    const date = new Date();
+
+    let payload: any;
+    await rabbit.createWorker(queue, async (data) => {
+      payload = data;
+    });
+
+    const client = await rabbit.createClient(queue);
+    await client({ date });
+
+    expect(payload).to.deep.equal({ date });
+  });
+
+  it('should receive response with Date object', async () => {
+    const queue = 'test_queue';
+    const date = new Date();
+
+    await rabbit.createWorker(queue, async () => ({
+      date,
+    }));
+
+    const client = await rabbit.createClient(queue);
+    const response = await client({ date });
+
+    expect(response).to.deep.equal({ date });
+  });
+
   it('should distribute requests to multile workers', async () => {
     const queue = 'test_queue';
 

@@ -2,14 +2,30 @@ import { Connection, Channel } from 'amqplib';
 import AppError from 'onewallet.library.error';
 
 import logger from './logger';
-import { PublishMessage } from './types';
+import { PublishMessage, PublisherOptions } from './types';
+import serialize from './serialize';
 
 export default class Publisher {
   public channel: Channel | null = null;
 
   private connection: Connection;
 
-  public constructor(connection: Connection, private readonly exchange: string) {
+  private options: Required<PublisherOptions> = {
+    serialize: true,
+  };
+
+  public constructor(
+    connection: Connection,
+    private readonly exchange: string,
+    options?: PublisherOptions,
+  ) {
+    if (options) {
+      this.options = {
+        ...this.options,
+        ...options,
+      };
+    }
+
     this.connection = connection;
   }
 
@@ -18,7 +34,7 @@ export default class Publisher {
       throw new AppError('CHANNEL_NOT_READY', 'Channel not started.');
     }
     const payload: PublishMessage = {
-      arguments: args,
+      arguments: this.options.serialize ? serialize(args) : args,
       timestamp: Date.now(),
     };
     logger.tag('publisher').verbose(payload);

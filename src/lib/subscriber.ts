@@ -5,6 +5,7 @@ import AppError from 'onewallet.library.error';
 
 import logger from './logger';
 import { SubscriberOptions, PublishMessage } from './types';
+import deserialize from './deserialize';
 
 export default class Subscriber {
   private channel: Channel | null = null;
@@ -13,13 +14,11 @@ export default class Subscriber {
 
   private connection: Connection;
 
-  private options: {
-    topics: string[];
-    queue?: string;
-    concurrency: number;
-  } = {
+  private options: Required<SubscriberOptions> = {
     topics: [],
     concurrency: 1,
+    queue: uuid().replace('-', ''),
+    deserialize: true,
   };
 
   private topics: string[];
@@ -40,7 +39,7 @@ export default class Subscriber {
     }
 
     this.connection = connection;
-    this.queue = `subscriber.${this.options.queue || uuid().replace('-', '')}`;
+    this.queue = `subscriber.${this.options.queue}`;
     this.topics = this.options.topics;
   }
 
@@ -81,6 +80,8 @@ export default class Subscriber {
 
     await this.channel.prefetch(this.options.concurrency);
 
+    const { options } = this;
+
     await this.channel.consume(
       this.queue,
       async (message) => {
@@ -89,19 +90,26 @@ export default class Subscriber {
             return;
           }
 
-          const payload: PublishMessage = JSON.parse(
+          let payload: PublishMessage = JSON.parse(
             message.content.toString()
           );
+
+          if (options.deserialize) {
+            payload = {
+              ...payload,
+              arguments: deserialize(payload.arguments),
+            };
+          }
           logger.tag('subscriber').verbose(payload);
 
           try {
-            let result = this.handler.apply(this.handler, payload.arguments);
+            const result = this.handler.apply(this.handler, payload.arguments);
 
             if (
               !(result === null || result === undefined)
               && typeof result.then === 'function'
             ) {
-              result = await result;
+              await result;
             }
           } catch (err) {
             logger.tag('subscriber').warn(err);

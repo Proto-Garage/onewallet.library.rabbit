@@ -9,6 +9,8 @@ const onewallet_library_error_1 = __importDefault(require("onewallet.library.err
 const ramda_1 = __importDefault(require("ramda"));
 const logger_1 = __importDefault(require("./logger"));
 const delay_1 = __importDefault(require("./delay"));
+const serialize_1 = __importDefault(require("./serialize"));
+const deserialize_1 = __importDefault(require("./deserialize"));
 class Client {
     constructor(connection, queue, options) {
         this.queue = queue;
@@ -19,6 +21,8 @@ class Client {
         this.options = {
             timeout: 60000,
             noResponse: false,
+            deserialize: true,
+            serialize: true,
         };
         if (options) {
             this.options = Object.assign({}, this.options, options);
@@ -33,7 +37,7 @@ class Client {
             const correlationId = uuid_1.v1().replace(/-/g, '');
             const request = {
                 correlationId,
-                arguments: args,
+                arguments: this.options.serialize ? serialize_1.default(args) : args,
                 noResponse: this.options.noResponse,
                 timestamp: Date.now(),
             };
@@ -80,12 +84,16 @@ class Client {
             expires: 600000,
             durable: true,
         });
+        const { options } = this;
         await this.channel.consume(this.callback, async (message) => {
             if (!message) {
                 return;
             }
             const { properties: { correlationId }, } = message;
-            const response = JSON.parse(message.content.toString());
+            let response = JSON.parse(message.content.toString());
+            if (!ramda_1.default.isNil(response.result) && options.deserialize) {
+                response = Object.assign({}, response, { result: deserialize_1.default(response.result) });
+            }
             logger_1.default
                 .tag('client')
                 .tag('response')

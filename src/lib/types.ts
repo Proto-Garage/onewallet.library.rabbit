@@ -25,14 +25,23 @@ export interface PublishMessage {
 export interface ClientOptions {
   timeout?: number;
   noResponse?: boolean;
+  serialize?: boolean;
+  deserialize?: boolean;
 }
 
 export interface WorkerOptions {
   concurrency?: number;
+  serialize?: boolean;
+  deserialize?: boolean;
+}
+
+export interface PublisherOptions {
+  serialize?: boolean;
 }
 
 export interface SubscriberOptions {
   topics: string[];
   queue?: string;
   concurrency?: number;
+  deserialize?: boolean;
 }

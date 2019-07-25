@@ -5,10 +5,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
 const logger_1 = __importDefault(require("./logger"));
+const serialize_1 = __importDefault(require("./serialize"));
 class Publisher {
-    constructor(connection, exchange) {
+    constructor(connection, exchange, options) {
         this.exchange = exchange;
         this.channel = null;
+        this.options = {
+            serialize: true,
+        };
+        if (options) {
+            this.options = Object.assign({}, this.options, options);
+        }
         this.connection = connection;
     }
     async send(topic, ...args) {
@@ -16,7 +23,7 @@ class Publisher {
             throw new onewallet_library_error_1.default('CHANNEL_NOT_READY', 'Channel not started.');
         }
         const payload = {
-            arguments: args,
+            arguments: this.options.serialize ? serialize_1.default(args) : args,
             timestamp: Date.now(),
         };
         logger_1.default.tag('publisher').verbose(payload);

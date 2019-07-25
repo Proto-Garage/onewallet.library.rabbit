@@ -7,6 +7,7 @@ const uuid_1 = require("uuid");
 const p_queue_1 = __importDefault(require("p-queue"));
 const onewallet_library_error_1 = __importDefault(require("onewallet.library.error"));
 const logger_1 = __importDefault(require("./logger"));
+const deserialize_1 = __importDefault(require("./deserialize"));
 class Subscriber {
     constructor(connection, exchange, handler, options) {
         this.exchange = exchange;
@@ -16,12 +17,14 @@ class Subscriber {
         this.options = {
             topics: [],
             concurrency: 1,
+            queue: uuid_1.v4().replace('-', ''),
+            deserialize: true,
         };
         if (options) {
             this.options = Object.assign({}, this.options, options);
         }
         this.connection = connection;
-        this.queue = `subscriber.${this.options.queue || uuid_1.v4().replace('-', '')}`;
+        this.queue = `subscriber.${this.options.queue}`;
         this.topics = this.options.topics;
     }
     async addTopic(topic) {
@@ -51,18 +54,22 @@ class Subscriber {
             }
         }));
         await this.channel.prefetch(this.options.concurrency);
+        const { options } = this;
         await this.channel.consume(this.queue, async (message) => {
             await this.taskQueue.add(async () => {
                 if (!message || !this.channel) {
                     return;
                 }
-                const payload = JSON.parse(message.content.toString());
+                let payload = JSON.parse(message.content.toString());
+                if (options.deserialize) {
+                    payload = Object.assign({}, payload, { arguments: deserialize_1.default(payload.arguments) });
+                }
                 logger_1.default.tag('subscriber').verbose(payload);
                 try {
-                    let result = this.handler.apply(this.handler, payload.arguments);
+                    const result = this.handler.apply(this.handler, payload.arguments);
                     if (!(result === null || result === undefined)
                         && typeof result.then === 'function') {
-                        result = await result;
+                        await result;
                     }
                 }
                 catch (err) {

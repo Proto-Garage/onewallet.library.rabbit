@@ -7,6 +7,8 @@ import R from 'ramda';
 import logger from './logger';
 import { RequestMessage, ClientOptions, ResponseMessage } from './types';
 import delay from './delay';
+import serialize from './serialize';
+import deserialize from './deserialize';
 
 export default class Client {
   public channel: Channel | null = null;
@@ -19,12 +21,11 @@ export default class Client {
 
   private connection: Connection;
 
-  private options: {
-    timeout: number;
-    noResponse: boolean;
-  } = {
+  private options: Required<ClientOptions> = {
     timeout: 60000,
     noResponse: false,
+    deserialize: true,
+    serialize: true,
   };
 
   public constructor(
@@ -54,7 +55,7 @@ export default class Client {
 
       const request: RequestMessage = {
         correlationId,
-        arguments: args,
+        arguments: this.options.serialize ? serialize(args) : args,
         noResponse: this.options.noResponse,
         timestamp: Date.now(),
       };
@@ -119,6 +120,8 @@ export default class Client {
       durable: true,
     });
 
+    const { options } = this;
+
     await this.channel.consume(
       this.callback,
       async (message) => {
@@ -130,9 +133,16 @@ export default class Client {
           properties: { correlationId },
         } = message;
 
-        const response: ResponseMessage = JSON.parse(
+        let response: ResponseMessage = JSON.parse(
           message.content.toString()
         );
+
+        if (!R.isNil(response.result) && options.deserialize) {
+          response = {
+            ...response,
+            result: deserialize(response.result),
+          };
+        }
 
         logger
           .tag('client')

@@ -2,6 +2,7 @@ import sinon from 'sinon';
 import randomstring from 'randomstring';
 import { expect } from 'chai';
 import R from 'ramda';
+
 import Rabbit from '../src';
 import delay from '../src/lib/delay';
 

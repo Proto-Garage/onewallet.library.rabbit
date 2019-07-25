@@ -1,5 +1,5 @@
 import { Connection, connect } from 'amqplib';
-import * as retry from 'retry';
+import retry from 'retry';
 
 import logger from './lib/logger';
 import Client from './lib/client';

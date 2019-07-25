@@ -1,17 +1,10 @@
 "use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const amqplib_1 = require("amqplib");
-const retry = __importStar(require("retry"));
+const retry_1 = __importDefault(require("retry"));
 const logger_1 = __importDefault(require("./lib/logger"));
 const client_1 = __importDefault(require("./lib/client"));
 exports.Client = client_1.default;
@@ -37,7 +30,7 @@ class Rabbit {
             this.options = Object.assign({}, this.options, options);
         }
         const establishConnection = () => new Promise((resolve) => {
-            const operation = retry.operation({
+            const operation = retry_1.default.operation({
                 forever: true,
                 factor: 2,
                 minTimeout: 1000,

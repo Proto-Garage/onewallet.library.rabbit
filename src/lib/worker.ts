@@ -3,16 +3,18 @@ import TaskQueue from 'p-queue';
 
 import logger from './logger';
 import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
+import deserialize from './deserialize';
+import serialize from './serialize';
 
 export default class Worker {
   private channel: Channel | null = null;
 
   private taskQueue = new TaskQueue();
 
-  private options: {
-    concurrency: number;
-  } = {
+  private options: Required<WorkerOptions> = {
     concurrency: 1,
+    serialize: true,
+    deserialize: true,
   };
 
   private connection: Connection;
@@ -49,6 +51,8 @@ export default class Worker {
     });
     await this.channel.prefetch(this.options.concurrency);
 
+    const { options } = this;
+
     await this.channel.consume(
       this.queue,
       async (message) => {
@@ -61,9 +65,16 @@ export default class Worker {
             properties: { correlationId },
           } = message;
 
-          const request: RequestMessage = JSON.parse(
+          let request: RequestMessage = JSON.parse(
             message.content.toString()
           );
+
+          if (options.deserialize) {
+            request = {
+              ...request,
+              arguments: deserialize(request.arguments),
+            };
+          }
 
           logger
             .tag('worker')
@@ -79,6 +90,10 @@ export default class Worker {
               && typeof result.then === 'function'
             ) {
               result = await result;
+            }
+
+            if (options.serialize) {
+              result = serialize(result);
             }
 
             response.result = result;
