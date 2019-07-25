@@ -1,6 +1,6 @@
 {
   "name": "onewallet.library.rabbit",
-  "version": "0.4.16",
+  "version": "0.5.0-rc.0",
   "description": "RabbitMQ client",
   "main": "build/index.js",
   "scripts": {
