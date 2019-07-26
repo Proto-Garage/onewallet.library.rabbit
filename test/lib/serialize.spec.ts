@@ -58,15 +58,22 @@ describe('serialize', () => {
     });
   });
 
-  describe('Given a plain object', () => {
+  describe.only('Given a plain object', () => {
     it('should return a plain object', () => {
-      expect(serialize({
-        one: 1,
-        two: 2,
-      })).to.deep.equal({
-        one: 1,
-        two: 2,
-      });
+      const object = {
+        id: '534aaff3-35fc-4aa1-a6f5-93bb9ede139f',
+        admin: 'acc_9939c4d8bdbf5c379b6d26548f524f1c',
+        isDefault: true,
+        name: 'Regular',
+        description: 'Hello',
+        handlingFeeType: 'percentage',
+        handlingFee: 0.001,
+        minimumSingleWithdrawalLimit: 10,
+        maximumSingleWithdrawalLimit: 1000,
+        maximumDailyWithdrawalLimit: 10000,
+      };
+
+      expect(serialize(object)).to.deep.equal(object);
     });
   });
 

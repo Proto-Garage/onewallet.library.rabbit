@@ -91,7 +91,7 @@ export default class Worker {
             ) {
               result = await result;
             }
-            logger.tag('result').silly(result);
+
             if (options.serialize) {
               result = serialize(result);
             }
