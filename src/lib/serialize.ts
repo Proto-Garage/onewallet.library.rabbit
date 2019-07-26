@@ -32,7 +32,9 @@ function serialize(object: any): any {
       return null;
     }
 
-    return R.map(serialize)(object);
+    if (object instanceof Array) {
+      return R.map(serialize)(object);
+    }
   }
 
   return object;

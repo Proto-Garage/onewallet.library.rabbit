@@ -57,6 +57,7 @@ class Worker {
                         && typeof result.then === 'function') {
                         result = await result;
                     }
+                    logger_1.default.tag('result').silly(result);
                     if (options.serialize) {
                         result = serialize_1.default(result);
                     }

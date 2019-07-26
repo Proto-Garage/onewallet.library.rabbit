@@ -31,7 +31,9 @@ function serialize(object) {
         if (object === null) {
             return null;
         }
-        return ramda_1.default.map(serialize)(object);
+        if (object instanceof Array) {
+            return ramda_1.default.map(serialize)(object);
+        }
     }
     return object;
 }
