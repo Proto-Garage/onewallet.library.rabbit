@@ -8,12 +8,15 @@ export interface RequestMessage {
 export interface ResponseMessage {
   correlationId: string;
   result?: any;
-  error?: {
+  error?: ({
+    name: 'AppError';
     code: string;
+    service: string;
+  } | {
+    name: 'Error';
+  }) & {
     message: string;
-    meta?: {
-      [key: string]: any;
-    };
+    stack: string;
   };
 }
 

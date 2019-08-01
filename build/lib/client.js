@@ -98,11 +98,16 @@ class Client {
                 .tag('client')
                 .tag('response')
                 .verbose({ response });
+            const { error } = response;
             const callback = this.callbacks.get(correlationId);
             if (callback) {
-                if (response.error) {
-                    const { error } = response;
-                    callback.reject(new onewallet_library_error_1.default(error.code, error.message, ramda_1.default.omit(['code', 'message'])(error)));
+                if (error) {
+                    if (error.name === 'AppError') {
+                        callback.reject(new onewallet_library_error_1.default(error.code, error.message, { original: error }));
+                    }
+                    else {
+                        callback.reject(new onewallet_library_error_1.default('SERVER_ERROR', error.message, { original: error }));
+                    }
                 }
                 else {
                     callback.resolve(response.result);

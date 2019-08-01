@@ -1,5 +1,6 @@
 import { Connection, Channel } from 'amqplib';
 import TaskQueue from 'p-queue';
+import serializeError from 'serialize-error';
 
 import logger from './logger';
 import { RequestMessage, WorkerOptions, ResponseMessage } from './types';
@@ -103,10 +104,7 @@ export default class Worker {
             if (err.name === 'AppError') {
               response.error = err.toJSON();
             } else {
-              response.error = {
-                code: 'SERVER_ERROR',
-                message: 'Internal server error',
-              };
+              response.error = serializeError(err);
             }
           }
 

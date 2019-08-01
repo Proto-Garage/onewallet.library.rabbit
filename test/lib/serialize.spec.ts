@@ -58,7 +58,7 @@ describe('serialize', () => {
     });
   });
 
-  describe.only('Given a plain object', () => {
+  describe('Given a plain object', () => {
     it('should return a plain object', () => {
       const object = {
         id: '534aaff3-35fc-4aa1-a6f5-93bb9ede139f',

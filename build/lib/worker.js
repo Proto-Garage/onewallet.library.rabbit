@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const p_queue_1 = __importDefault(require("p-queue"));
+const serialize_error_1 = __importDefault(require("serialize-error"));
 const logger_1 = __importDefault(require("./logger"));
 const deserialize_1 = __importDefault(require("./deserialize"));
 const serialize_1 = __importDefault(require("./serialize"));
@@ -68,10 +69,7 @@ class Worker {
                         response.error = err.toJSON();
                     }
                     else {
-                        response.error = {
-                            code: 'SERVER_ERROR',
-                            message: 'Internal server error',
-                        };
+                        response.error = serialize_error_1.default(err);
                     }
                 }
                 await this.channel.ack(message);

@@ -149,17 +149,28 @@ export default class Client {
           .tag('response')
           .verbose({ response });
 
+        const { error } = response;
+
         const callback = this.callbacks.get(correlationId);
         if (callback) {
-          if (response.error) {
-            const { error } = response;
-            callback.reject(
-              new AppError(
-                error.code,
-                error.message,
-                R.omit(['code', 'message'])(error)
-              )
-            );
+          if (error) {
+            if (error.name === 'AppError') {
+              callback.reject(
+                new AppError(
+                  error.code,
+                  error.message,
+                  { original: error }
+                )
+              );
+            } else {
+              callback.reject(
+                new AppError(
+                  'SERVER_ERROR',
+                  error.message,
+                  { original: error }
+                )
+              );
+            }
           } else {
             callback.resolve(response.result);
           }
