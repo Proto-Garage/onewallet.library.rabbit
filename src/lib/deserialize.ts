@@ -3,7 +3,6 @@ import R from 'ramda';
 function deserialize(object: any): any {
   const type = typeof object;
 
-
   if (type === 'object') {
     if (object === null) {
       return null;
@@ -21,6 +20,10 @@ function deserialize(object: any): any {
 
       if (object.type === 'Map') {
         return new Map(object.data);
+      }
+
+      if (object.type === 'Buffer') {
+        return Buffer.from(object.data, 'base64');
       }
     }
 

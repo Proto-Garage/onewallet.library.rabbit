@@ -28,7 +28,7 @@ describe('deserialize', () => {
   });
 
   describe('Given a serialized Date object', () => {
-    it('should return a serialized Date object', () => {
+    it('should return a Date object', () => {
       const date = new Date();
       expect(deserialize({
         __classObject: true,
@@ -38,8 +38,8 @@ describe('deserialize', () => {
     });
   });
 
-  describe('Given a Set object', () => {
-    it('should return a serialized Set object', () => {
+  describe('Given a serialized Set object', () => {
+    it('should return a Set object', () => {
       expect(deserialize({
         __classObject: true,
         type: 'Set',
@@ -48,13 +48,23 @@ describe('deserialize', () => {
     });
   });
 
-  describe('Given a Map object', () => {
-    it('should return a serialized Map object', () => {
+  describe('Given a serialized Map object', () => {
+    it('should return a Map object', () => {
       expect(deserialize({
         __classObject: true,
         type: 'Map',
         data: [['one', 1], ['two', 2]],
       })).to.deep.equal(new Map([['one', 1], ['two', 2]]));
+    });
+  });
+
+  describe('Given a serialized Map object', () => {
+    it('should return a Map object', () => {
+      expect(deserialize({
+        __classObject: true,
+        type: 'Buffer',
+        data: 'SGVsbG8gV29ybGQh',
+      })).to.deep.equal(Buffer.from('Hello World!'));
     });
   });
 

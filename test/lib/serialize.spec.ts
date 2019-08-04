@@ -58,6 +58,16 @@ describe('serialize', () => {
     });
   });
 
+  describe('Given a Buffer object', () => {
+    it('should return a serialized Buffer object', () => {
+      expect(serialize(Buffer.from('Hello World!'))).to.deep.equal({
+        __classObject: true,
+        type: 'Buffer',
+        data: 'SGVsbG8gV29ybGQh',
+      });
+    });
+  });
+
   describe('Given a plain object', () => {
     it('should return a plain object', () => {
       const object = {

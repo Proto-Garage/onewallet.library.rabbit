@@ -20,6 +20,9 @@ function deserialize(object) {
             if (object.type === 'Map') {
                 return new Map(object.data);
             }
+            if (object.type === 'Buffer') {
+                return Buffer.from(object.data, 'base64');
+            }
         }
         return ramda_1.default.map(deserialize)(object);
     }

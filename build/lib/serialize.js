@@ -28,6 +28,13 @@ function serialize(object) {
                 data: Array.from(object),
             };
         }
+        if (object instanceof Buffer) {
+            return {
+                __classObject: true,
+                type: 'Buffer',
+                data: object.toString('base64'),
+            };
+        }
         if (object === null) {
             return null;
         }
