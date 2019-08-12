@@ -23,7 +23,7 @@ export {
 };
 
 export default class Rabbit {
-  private connecting: Promise<Connection>;
+  private connectionPromise: Promise<Connection>;
 
   private connection: Connection | null = null;
 
@@ -64,7 +64,7 @@ export default class Rabbit {
           connection.on('close', () => {
             logger.info('disconnected');
             if (!this.stopping) {
-              this.connecting = establishConnection();
+              this.connectionPromise = establishConnection();
             }
           });
 
@@ -84,14 +84,14 @@ export default class Rabbit {
       });
     });
 
-    this.connecting = establishConnection();
+    this.connectionPromise = establishConnection();
   }
 
   public async createClient<TInput extends any[] = any[], TOutput = any>(
     scope: string,
     options?: ClientOptions
   ) {
-    const connection = await this.connecting;
+    const connection = await this.connectionPromise;
 
     const client = new Client(
       connection,
@@ -102,7 +102,10 @@ export default class Rabbit {
 
     this.channels.push(client);
 
-    return (...args: TInput) => client.send<TInput, TOutput>(...args);
+    const func = (...args: TInput) => client.send<TInput, TOutput>(...args);
+    func.client = client;
+
+    return func;
   }
 
   public async createWorker(
@@ -110,7 +113,7 @@ export default class Rabbit {
     handler: (...args: any[]) => Promise<any>,
     options?: WorkerOptions
   ) {
-    const connection = await this.connecting;
+    const connection = await this.connectionPromise;
 
     const worker = new Worker(
       connection,
@@ -126,7 +129,7 @@ export default class Rabbit {
   }
 
   public async createPublisher(scope: string) {
-    const connection = await this.connecting;
+    const connection = await this.connectionPromise;
 
     const publisher = new Publisher(
       connection,
@@ -136,9 +139,12 @@ export default class Rabbit {
 
     this.channels.push(publisher);
 
-    return async function publish(topic: string, ...args: any[]) {
+    const func = async function publish(topic: string, ...args: any[]) {
       return publisher.send.apply(publisher, [topic, ...args]);
     };
+    func.publisher = publisher;
+
+    return func;
   }
 
   public async createSubscriber(
@@ -146,7 +152,7 @@ export default class Rabbit {
     handler: (...args: any[]) => Promise<any>,
     options?: SubscriberOptions
   ) {
-    const connection = await this.connecting;
+    const connection = await this.connectionPromise;
 
     const subscriber = new Subscriber(
       connection,

@@ -13,15 +13,21 @@ interface RabbitOptions {
 }
 export { Client, Worker, Publisher, Subscriber, };
 export default class Rabbit {
-    private connecting;
+    private connectionPromise;
     private connection;
     private stopping;
     private options;
     private channels;
     constructor(options?: RabbitOptions);
-    createClient<TInput extends any[] = any[], TOutput = any>(scope: string, options?: ClientOptions): Promise<(...args: TInput) => Promise<TOutput | undefined>>;
+    createClient<TInput extends any[] = any[], TOutput = any>(scope: string, options?: ClientOptions): Promise<{
+        (...args: TInput): Promise<TOutput | undefined>;
+        client: Client;
+    }>;
     createWorker(scope: string, handler: (...args: any[]) => Promise<any>, options?: WorkerOptions): Promise<Worker>;
-    createPublisher(scope: string): Promise<(topic: string, ...args: any[]) => Promise<void>>;
+    createPublisher(scope: string): Promise<{
+        (topic: string, ...args: any[]): Promise<void>;
+        publisher: Publisher;
+    }>;
     createSubscriber(scope: string, handler: (...args: any[]) => Promise<any>, options?: SubscriberOptions): Promise<Subscriber>;
     stop(): Promise<void>;
 }

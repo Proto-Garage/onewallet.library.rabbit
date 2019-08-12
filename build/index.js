@@ -44,7 +44,7 @@ class Rabbit {
                     connection.on('close', () => {
                         logger_1.default.info('disconnected');
                         if (!this.stopping) {
-                            this.connecting = establishConnection();
+                            this.connectionPromise = establishConnection();
                         }
                     });
                     connection.on('error', (err) => {
@@ -61,33 +61,37 @@ class Rabbit {
                 }
             });
         });
-        this.connecting = establishConnection();
+        this.connectionPromise = establishConnection();
     }
     async createClient(scope, options) {
-        const connection = await this.connecting;
+        const connection = await this.connectionPromise;
         const client = new client_1.default(connection, `${this.options.prefix || ''}${scope}`, options);
         await client.start();
         this.channels.push(client);
-        return (...args) => client.send(...args);
+        const func = (...args) => client.send(...args);
+        func.client = client;
+        return func;
     }
     async createWorker(scope, handler, options) {
-        const connection = await this.connecting;
+        const connection = await this.connectionPromise;
         const worker = new worker_1.default(connection, `${this.options.prefix || ''}${scope}`, handler, options);
         await worker.start();
         this.channels.push(worker);
         return worker;
     }
     async createPublisher(scope) {
-        const connection = await this.connecting;
+        const connection = await this.connectionPromise;
         const publisher = new publisher_1.default(connection, `${this.options.prefix || ''}${scope}`);
         await publisher.start();
         this.channels.push(publisher);
-        return async function publish(topic, ...args) {
+        const func = async function publish(topic, ...args) {
             return publisher.send.apply(publisher, [topic, ...args]);
         };
+        func.publisher = publisher;
+        return func;
     }
     async createSubscriber(scope, handler, options) {
-        const connection = await this.connecting;
+        const connection = await this.connectionPromise;
         const subscriber = new subscriber_1.default(connection, `${this.options.prefix || ''}${scope}`, handler, options);
         await subscriber.start();
         this.channels.push(subscriber);
