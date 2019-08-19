@@ -103,7 +103,7 @@ class Client {
             if (callback) {
                 if (error) {
                     if (error.name === 'AppError') {
-                        callback.reject(new onewallet_library_error_1.default(error.code, error.message, { original: error }));
+                        callback.reject(new onewallet_library_error_1.default(error.code, error.message, Object.assign({}, ramda_1.default.omit(['id', 'name', 'code', 'message', 'stack', 'service'])(error), { original: error }), error.service));
                     }
                     else {
                         callback.reject(new onewallet_library_error_1.default('SERVER_ERROR', error.message, { original: error }));

@@ -159,7 +159,11 @@ export default class Client {
                 new AppError(
                   error.code,
                   error.message,
-                  { original: error }
+                  {
+                    ...R.omit(['id', 'name', 'code', 'message', 'stack', 'service'])(error),
+                    original: error,
+                  },
+                  error.service
                 )
               );
             } else {
