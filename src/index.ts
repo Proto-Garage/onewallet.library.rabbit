@@ -49,8 +49,8 @@ export default class Rabbit {
     const establishConnection = () => new Promise<Connection>((resolve) => {
       const operation = retry.operation({
         forever: true,
-        factor: 2,
-        minTimeout: 1000,
+        factor: 3,
+        minTimeout: 5000,
         maxTimeout: 30000,
         randomize: true,
       });
